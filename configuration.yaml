@@ -2367,6 +2367,7 @@
           unit_of_measurement: 'lx'
 
       database_check:
+        restore: true
 
     automation:
 
@@ -2429,8 +2430,16 @@
           - platform: homeassistant
             event: start
         action:
+          - service: notify.homeassistant_debug
+            data_template:
+              message: >-
+                {{ now()|string + " - \"automation.homeassistant_database_check\" triggered. state of variable.database_check is: \"" + states("variable.database_check")|string + "\". waiting 10 seconds to ensure restored value." }}
           - delay:
-              seconds: 30
+              seconds: 10
+          - service: notify.homeassistant_debug
+            data_template:
+              message: >-
+                {{ now()|string + " - \"automation.homeassistant_database_check\" - 10 seconds passed. state of variable.database_check is: \"" + states("variable.database_check")|string + "\"." }}
           - condition: template
             value_template: >-
               {{ not is_state("variable.database_check", "ok") }}          
@@ -2443,7 +2452,7 @@
           - service: notify.homeassistant_debug
             data_template:
               message: >-
-                {{ now()|string + " - \"automation.homeassistant_database_check\" triggered. restoring defaults" }}
+                {{ now()|string + " - \"automation.homeassistant_database_check\" triggered. state of variable.database_check is: \"" + states("variable.database_check")|string + "\". restoring defaults" }}
           - service: script.homeassistant_defaults
 
       - id: 'theme_selector'    # apply theme via dropdown #todo create theme
@@ -4862,6 +4871,10 @@
           - service: climate.set_temperature
             data:
               temperature: 20
+          - service: climate.set_temperature
+            data:
+              entity_id: climate.michbaeck_ac
+              temperature: 23
           - service: homeassistant.turn_on
             data:
               entity_id:
@@ -4941,7 +4954,7 @@
                 - automation.wecker_snooze_action_2
                 - automation.wecker_warning
          
-         # all default variables
+          # all default variables
           - service: variable.set_variable
             data:
               variable: climate_bad_save
@@ -4995,7 +5008,7 @@
               variable: sun_elevation_max
               value: 15
 
-         # all default selections
+          # all default selections
           - service: input_select.select_option
             data:
               entity_id: input_select.daily_routine
@@ -5009,7 +5022,7 @@
               entity_id: input_select.michbaeck
               option: home
 
-         # all default numbers
+          # all default numbers
           - service: input_number.set_value
             data:
               entity_id: input_number.light_michbaeck_auto
@@ -5071,7 +5084,7 @@
               entity_id: input_number.alexa_volume
               value: 25
 
-         # default alarm time
+          # default alarm time
           - service: input_datetime.set_time
             data:
               entity_id: input_datetime.alarm
@@ -5081,7 +5094,7 @@
               entity_id: input_datetime.leave_home
               time: '07:30:00'
 
-         # mark database as valid
+          # mark database as valid
           - service: variable.set_variable
             data:
               variable: database_check
