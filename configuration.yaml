@@ -4,7 +4,7 @@
   #---------------------------------------------#
   #= legend - comment highlighting
 
-    #---- dividor
+    #--   divider
     #=    header
 
     #     comment
@@ -226,6 +226,95 @@
       #! username: !secret tuya_user
       #! password: !secret tuya_password
       #! country_code: 49
+
+    scene:
+      # - name: flur_kueche_warm
+        # entities:
+        #   light.flur_kueche:
+        #     hs_color: [35.426,73.725]
+        #     brightness: 254
+      # - name: flur_kueche_bright
+        # entities:
+        #   light.flur_kueche:
+        #     hs_color: [38.667,52.941]
+        #     brightness: 254
+      # - name: flur_kueche_cozy
+        # entities:
+        #   light.flur_links:
+        #     hs_color: [22.468,92.157]
+        #     brightness: 254
+        #   light.flur_rechts:
+        #     hs_color: [33.273,86.275]
+        #     brightness: 183
+        #   light.esstisch:
+        #     hs_color: [31.765,86.667]
+        #     brightness: 232
+      - name: michbaeck_office
+        entities:
+          light.michbaeck_auto:
+            state: off
+          light.computer:
+            state: on
+          light.stehlampe:
+            state: on
+            brightness: 255
+          light.regal:
+            state: on
+            brightness: 255
+          light.schreibtisch:
+            state: on
+            brightness: 175
+            kelvin: 2200
+          light.ikea:
+            state: on
+            brightness: 100
+          light.bett:
+            state: off
+      - name: michbaeck_nightlight
+        entities:
+          light.michbaeck_hue:
+            state: on
+            brightness: 50
+            rgb_color: [255,50,0]
+            transition: 1
+      - name: michbaeck_evening
+        entities:
+          light.regal:
+            state: on
+            brightness: 253
+            rgb_color: [255,183,75]
+            transition: 10
+          light.stehlampe:
+            state: on
+            brightness: 253
+            rgb_color: [255,183,75]
+            transition: 10
+          light.schreibtisch:
+            state: on
+            brightness: 253
+            rgb_color: [255,183,75]
+            transition: 10
+          light.grosses_licht_1:
+            state: on
+            brightness: 253
+            rgb_color: [153,82,255]
+            transition: 10
+          light.grosses_licht_2:
+            state: on
+            brightness: 253
+            rgb_color: [255,183,75]
+            transition: 10
+          light.grosses_licht_3:
+            state: on
+            brightness: 253
+            rgb_color: [255,57,19]
+            transition: 10
+          light.bett:
+            state: on
+            brightness: 253
+            rgb_color: [255,139,0]
+            transition: 10
+
 
 #-----------------------------------------------------------------------------#
 #* SYSTEM + STATUS
@@ -871,27 +960,13 @@
       device_id: 012001872c3ae831a564
       id: 2
 
-    light grosses_licht:  # transform switch to light
+    light grosses_licht:  # group 3 bulb light to one
       platform: group
       name: grosses_licht
       entities:
         - light.grosses_licht_1
         - light.grosses_licht_2
         - light.grosses_licht_3
-      # platform: template
-      # lights:
-      #   grosses_licht:
-      #     friendly_name: Grosses Licht
-      #     value_template: >-
-      #       {{ is_state("switch.grosses_licht", "on") }}
-      #     turn_on:
-      #       service: switch.turn_on
-      #       data:
-      #         entity_id: switch.grosses_licht
-      #     turn_off:
-      #       service: switch.turn_off
-      #       data:
-      #         entity_id: switch.grosses_licht
 
     light michbaeck:    # group for all lights in michbaeck's room which will also disable automations when turned off
       platform: template
@@ -2532,6 +2607,36 @@
                   trigger.event.data.service_data|string
                 }}
 
+      - id: 'update_notification'   # [debug on] notifications when update available
+        alias: 'update_notification'
+        trigger:
+          - platform: state
+            entity_id: updater.updater
+        action:
+          - service: notify.homeassistant_debug
+            data_template:
+              message: >-
+                {{ now()|string + " - automation.update_notification triggered by " + trigger.entity_id + " changing its state FROM: " + trigger.from_state.state|string + " TO: " + trigger.to_state.state|string }}
+          - service: script.ticker_generator
+            data_template:
+              text: >-
+                Es steht ein Update auf Version {{ states("updater.updater")|string }} zur Verfügung, deine aktuelle Version ist {{ states("sensor.current_version")|string }}.
+          - wait_template: >-
+              {{ is_state("script.alexa_says", "off") }}
+          - service: script.alexa_says
+            data_template:
+              device: Schlafzimmer
+              text: >-
+                Es steht ein Update auf Version {{ states("updater.updater")|string }} zur Verfügung, deine aktuelle Version ist {{ states("sensor.current_version")|string }}.
+          - service: notify.iospush
+            data_template:
+              message: >-
+                Es steht ein Update auf Version {{ states("updater.updater")|string }} zur Verfügung, deine aktuelle Version ist {{ states("sensor.current_version")|string }}.
+              title: 'Update verfügbar'
+              data:
+                push:
+                  sound: 'silent.wav'
+
   #---------------------------------------------------------------------------#
   #= SLEEP
 
@@ -3517,6 +3622,20 @@
                 {{ now()|string + " - automation.climate_michbaeck_fan_speed triggered by " + trigger.entity + " - calling script.climate_michbaeck_fan_speed"}} 
           - service: script.climate_michbaeck_fan_speed
 
+      - id: 'climate_michbaeck_ac_temp'   # when changing climate temp mqtt-publish and adjust AC temp
+        alias: 'climate_michbaeck_ac_temp'
+        trigger:
+          - platform: state
+            entity_id:
+              - climate.michbaeck
+              - input_number.climate_michbaeck_tempdiff
+        action:
+          - service: climate.set_temperature
+            data_template:
+              entity_id: climate.michbaeck_ac
+              temperature: >-
+                  {{ state_attr("climate.michbaeck", "temperature")|float + states("input_number.climate_michbaeck_tempdiff")|int  }}
+
       #> - id: 'climate_michbaeck_away'    # [debug off] control climate on location change
         # alias: 'climate_michbaeck_away'
         # #. initial_state: true
@@ -4434,7 +4553,7 @@
   #---------------------------------------------------------------------------#
   #= WEATHER
         
-      - id: 'weather_light'                                                           # xiaomi light color matching to temperature
+      - id: 'weather_light'   # xiaomi light color matching to temperature
         alias: Weather Light
         initial_state: true
         trigger:
@@ -4455,6 +4574,76 @@
           - service: script.hue_from_temp
             data:
               light: 'light.xiaomi_gateway'
+      
+      - id: 'dwd_warning_current'   # show/hide dwd, announce warnings
+        alias: 'dwd_warning_current'
+        trigger:
+          - platform: homeassistant
+            event: start
+          - platform: state
+            entity_id: sensor.dwd_current_warning_level
+            to: '0'
+          - platform: state
+            entity_id: sensor.dwd_current_warning_level
+            from: '0'
+        action:
+          - service: persistent_notification.dismiss
+            data_template:
+              notification_id: dwd_warning
+          - condition: numeric_state
+            entity_id: sensor.dwd_current_warning_level
+            above: 0
+          - service: persistent_notification.create
+            data_template:
+              notification_id: dwd_warning
+              title: DWD Warnung aktuell
+              message: >-
+                  Es gibt eine Stufe {{ states("sensor.dwd_current_warning_level") }} Warnung vom DWD. Sie lautet {{ states("sensor.dwd_current_headline") }}.
+          - wait_template: >-
+              {{ is_state("script.alexa_says", "off") }}
+          - service: script.alexa_says    # alexa tts text
+            data_template:
+              device: Schlafzimmer
+              entity: script.dwd_warning_current
+              text: >-
+                  Es gibt eine Stufe {{ states("sensor.dwd_current_warning_level") }} Warnung vom DWD. Sie lautet {{ states("sensor.dwd_current_headline") }}.    
+
+      - id: 'dwd_warning_advance'   # show/hide dwd, announce warnings
+        alias: 'dwd_warning_advance'
+        trigger:
+          - platform: homeassistant
+            event: start
+          - platform: state
+            entity_id: sensor.dwd_advance_warning_level
+            to: '0'
+          - platform: state
+            entity_id: sensor.dwd_advance_warning_level
+            from: '0'
+        action:
+          - service: persistent_notification.dismiss
+            data_template:
+              notification_id: dwd_warning_advance
+          - condition: numeric_state
+            entity_id: sensor.dwd_advance_warning_level
+            above: 0
+          - service: persistent_notification.create
+            data_template:
+              notification_id: dwd_warning_advance
+              title: DWD Warnung Vorausschau
+              message: >-
+                  Es gibt eine Stufe {{ states("sensor.dwd_advance_warning_level") }} Warnung vom DWD. Sie lautet {{ states("sensor.dwd_advance_headline") }}.
+          - service: script.ticker_generator
+            data_template:
+              text: >-
+                  Es gibt eine Stufe {{ states("sensor.dwd_advance_warning_level") }} Warnung vom DWD. Sie lautet {{ states("sensor.dwd_advance_headline") }}.
+          - wait_template: >-
+              {{ is_state("script.alexa_says", "off") }}
+          - service: script.alexa_says    # alexa tts text
+            data_template:
+              device: Schlafzimmer
+              entity: script.dwd_warning_advance
+              text: >-
+                  Es gibt eine Stufe {{ states("sensor.dwd_advance_warning_level") }} Warnung vom DWD. Sie lautet {{ states("sensor.dwd_advance_headline") }}.
 
   #---------------------------------------------------------------------------#
   #= TICKER
