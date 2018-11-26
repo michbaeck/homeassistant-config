@@ -3796,6 +3796,12 @@
             entity_id: binary_sensor.motion_flur_helper
             to: 'off'
         action:
+          - condition: state
+            entity_id: binary_sensor.motion_flur_helper
+            state: 'off'
+          - condition: state
+            entity_id: light.flur
+            state: 'on'
           - service: light.turn_on
             data:
               entity_id: 
@@ -3839,6 +3845,9 @@
           - condition: state
             entity_id: binary_sensor.motion_kueche_helper
             state: 'off'
+          - condition: state
+            entity_id: light.kueche
+            state: 'on'
           - service: light.turn_on
             data:
               entity_id: 
@@ -3893,6 +3902,9 @@
           - condition: state
             entity_id: binary_sensor.motion_bad_helper
             state: 'off'
+          - condition: state
+            entity_id: light.bad
+            state: 'on'
           #. - service: notify.homeassistant_debug
             #. data_template:
             #.   title: Motion Bad
