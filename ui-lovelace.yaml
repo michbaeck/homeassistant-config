@@ -1295,6 +1295,7 @@ views:
             show_header_toggle: false
             entities:
               - entity: input_text.debug_regex
+              - entity: input_text.debug_regex_exclude
               - entity: input_boolean.debug_log
 
       - id: system_2

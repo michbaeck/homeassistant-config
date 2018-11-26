@@ -2229,6 +2229,10 @@
         initial: your_regex_pattern
         max: 100
 
+      debug_regex_exclude:
+        initial: dotmatrixdisplay|ticker
+        max: 100
+
       alarm_xiaomi:
         name: alarm_xiaomi
         max: 10
@@ -2426,7 +2430,7 @@
             event: start
         action:
           - delay:
-              seconds: 10
+              seconds: 30
           - condition: template
             value_template: >-
               {{ not is_state("variable.database_check", "ok") }}          
@@ -2497,11 +2501,13 @@
           condition: template
           value_template: >-
             {% set service =  trigger.event.data.domain|string + "." + trigger.event.data.service|string %}
-            {% set regex = states("input_text.debug_regex") %}
+            {% set include = states("input_text.debug_regex") %}
+            {% set exclude = states("input_text.debug_regex_exclude") %}
             
             {{ 
               is_state("input_boolean.debug_log", "on") and
-              service|regex_search(regex) and not
+              service|regex_search(include) and not
+              string|regex_search(exclude) and not
               string|regex_search("notify\.homeassistant_debug")
             }}
         action:
