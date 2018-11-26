@@ -1,0 +1,1841 @@
+title: Home
+
+#| schema
+  #|
+  #* DASHBOARD
+    #|
+    #[x] Ticker
+    #= Weather
+      #| forecast
+      #? condition DWD
+        #| dwd header
+        #| dwd description
+        #| dwd advise
+    #[x] Presence
+      #[x] michbaeck
+        #[x] location
+        #[x] routine
+        #[x] distance
+        #[x] direction
+      #[x] johannes
+    #= Scenes/Tasks
+      #[x] asleep
+      #[x] awake
+      #[x] alexa
+      #| home
+      #| away
+    #= Light
+      #[x] flux
+        #[x] adjust
+        #[x] sun
+      #[x] light.kueche
+        #[x] dimmer
+        #[x] color      
+        #[x] lux
+        #[x] motion
+      #[x] light.flur
+        #[x] dimmer
+        #[x] flur_links
+        #[x] flur_rechts
+        #| color
+        #[x] lux
+        #[x] motion
+      #[x] light.bad
+        #[x] lux
+        #[x] motion
+      #[x] light.wohnzimmer
+        #[x] dimmer
+        #| color      
+        #| lux
+      #[x] light.michbaeck_auto
+        #[x] dimmer
+        #[x] target
+        #[x] is
+        #[x] lux 1
+        #| lux 2
+        #[x] brightness
+        #[x] status
+      #[x] light.michbaeck_all
+        #[x] dimmer
+        #[x] grosses_licht
+        #[x] stehlampe
+        #[x] regal
+        #[x] schreibtisch
+        #[x] ikea
+        #[x] xiaomi
+        #[x] bett
+    #= Climate
+      #| switch.boiler
+      #| temp.flur
+      #|
+      #| climate.kueche
+        #| temp
+        #| humidity
+        #| window
+        #| switch
+      #| climate.bad
+        #| temp
+        #| window
+        #| switch
+      #| climate.michbaeck
+        #| temp
+        #| door      
+        #| window 1  
+        #| window 2
+        #| switch
+      #| climate.michbaeck_ac
+        #| fan
+      #|
+      #| automatic setting
+    #= Plants
+      #[x] plant 1
+        #| water
+        #| water switch
+        #| power switch
+        #? graph
+        #|
+        #| water setting
+      #[x] plant 2
+        #[x] water
+        #[x] water switch
+        #| power switch
+        #? graph
+        #|
+      #|
+      #[x] update voice
+        #[x] issue 1 setting
+        #[x] issue 2 setting
+        #[x] update setting
+        #[x] update script
+        #[x] water setting
+    #= Devices
+      #| lötkolben
+        #| timer settings
+      #? condition lötkolben on
+        #| lötkolben timer
+      #|
+      #| drucker
+        #| timer input
+        #| timer start
+      #? condition drucker timer on
+        #| drucker timer
+  #|
+  #* SLEEP
+    #= Alarm
+      #| alarm time
+      #| leave time
+      #| workday
+      #| calendar
+      #|
+      #| settings
+        #| alarm auto setting
+        #| alarm setting
+    #= Sleep
+      #| load
+      #| load change
+      #| sleepcycle
+      #| sleepcycle ratio
+      #|
+      #| settings
+        #| ref
+        #| raw min
+        #| raw ref
+        #| sensibility
+  #|
+  #* STATUS
+    #|
+    #= System
+      #| database
+      #| vpn
+      #| uptime
+    #= IoT
+      #| esp01..n
+        #| link
+        #| attributes
+      #|
+
+
+# Include external resources
+resources:
+  - url: /local/custom-lovelace/graph-card/graph-card.js?v=2
+    type: js
+    # https://community.home-assistant.io/t/lovelace-custom-history-graph/71450
+
+  - url: /local/custom-lovelace/calendar-card.js?v=1.0.1
+    type: module
+  - url: https://unpkg.com/moment@2.22.2/moment.js
+    type: js
+
+  - url: /local/custom-lovelace/spotify-playlist-card.js?v=1
+    type: js
+
+  - url: /local/custom-lovelace/circle-sensor-card.js?v=1
+    type: module
+
+  - url: /local/custom-lovelace/popup-card.js?v=1
+    type: js
+
+  - url: /local/custom-lovelace/slider-entity-row.js?v=1
+    type: js
+
+  - url: /local/custom-lovelace/fold-entity-row.js?v=1
+    type: js
+
+  - url: /local/custom-lovelace/swipe-card/swipe-card.js?v=1.1.0
+    type: module
+      # - type: custom:swipe-card
+        # parameters:
+        #   spaceBetween: 8
+        #   scrollbar:
+        #     hide: false
+        #     draggable: true
+        #     snapOnRelease: true
+        # cards:
+        #   - type: sensor
+        #     entity: sensor.temperature_158d0001720278
+        #     name: Temperatuur
+        #     line_width: 8
+        #     line_color: '#FF6384'
+        #   - type: sensor
+        #     entity: sensor.humidity_158d0001720278
+        #     name: Luchtvochtigheid
+        #     line_color: '#36A2EB'
+        #     line_width: 8
+      ###############
+      # - type: custom:swipe-card
+        # card_width: '185px'
+        # start_card: 2
+        # parameters:
+        #   effect: 'coverflow'
+        #   grabCursor: true
+        #   centeredSlides: true
+        #   slidesPerView: 'auto'
+        #   coverflowEffect:
+        #     rotate: 50
+        #     stretch: 0
+        #     depth: 100
+        #     modifier: 1
+        #     slideShadows : true
+        #   pagination:
+        #     type: 'bullets'
+        # cards:
+          # - type: sensor
+          #   entity: sensor.temperature_158d0001720278
+          #   name: Temperatuur
+          #   line_width: 8
+          #   line_color: '#FF6384'
+          # - type: sensor
+          #   entity: sensor.humidity_158d0001720278
+          #   name: Luchtvochtigheid
+          #   line_color: '#36A2EB'
+          #   line_width: 8
+
+  - url: /local/custom-lovelace/beer-card.js?v=1
+    type: js
+
+  - url: /local/custom-lovelace/entity-attributes-card.js?v=1
+    type: js
+      # - type: entities
+        # title: Entities card
+        # entities:
+          # - media_player.bedroom
+          # - type: custom:entity-attributes-card
+          #   entity: media_player.bedroom
+          #   filter:
+          #     include:
+          #       - media_player.bedroom.app_name
+          #       - media_player.bedroom.media_title
+          # - sensor.short_name
+          # - sensor.battery_sensor
+
+  - url: /local/custom-lovelace/mini-graph-card.js?v=0.0.7
+    type: module
+      # Name	            Type	Default	Since	Description
+      # type	            string	required	v0.0.1	custom:mini-graph-card.
+      # entity	          string	required	v0.0.1	Entity id of the sensor.
+      # icon	            string	optional	v0.0.1	Set a custom icon from any of the available mdi icons.
+      # name	            string	optional	v0.0.1	Set a custom name which is displayed beside the icon.
+      # unit	            string	optional	v0.0.1	Set a custom unit of measurement.
+      # accuracy	        number	10	      v0.0.1	Specify how many data points should be used to render the graph, higher number equals in a more detailed graph. Results may vary depending on how often the sensor updates. (Recommended to keep between 5 & 50).
+      # height	          number	150	      v0.0.1	Set a custom height of the line graph.
+      # line_width	      number	5	        v0.0.1	Set the thickness of the line.
+      # line_color	      string		        v0.0.1	Set a custom color for the line in the graph. ('var(accent-color)')
+      # more_info	        boolean	true	    v0.0.1	Set to false to disable the "more info" dialog when pressing the card.
+      # hours_to_show	    number	24	      v0.0.2	Specify how many hours to show.
+      # font_size	        number	100	      v0.0.3	Adjust the font size of the state value, as percentage of the original size.
+      # line_value_above	number	optional	v0.0.4	Set a threshold, if current state is above this value, the line color will change to color specified in line_value_above.
+      # line_color_above	string	optional	v0.0.4	Set the line color for line_value_above
+      # line_value_below	number	optional	v0.0.4	Set a threshold, if current state is below this value, the line color will change to color specified in line_value_below.
+      # line_color_below	string	optional	v0.0.4	Set the line color for line_value_below.
+      # hide_icon	        boolean	optional	v0.0.5	Set to true to hide icon.
+
+  - url: /local/custom-lovelace/mini-media-player-bundle.js?v=0.9.2
+    type: module
+      # Name	Type	Default	Since	Description
+      # type	string	required	v0.1	custom:mini-media-player
+      # entity	string	required	v0.1	An entity_id from an entity within the media_player domain.
+      # title	string	optional	v0.1	Set a card title.
+      # name	string	optional	v0.6	Override the entities friendly name.
+      # icon	string	optional	v0.1	Specify a custom icon from any of the available mdi icons.
+      # group	boolean	false	v0.1	Disable paddings and box-shadow.
+      # show_tts	string	optional	v0.2	Show Text-To-Speech input, specify TTS platform, e.g. show_tts: google or show_tts: amazon_polly.
+      # show_source	string	false	v0.7	true display source select, small to only display the source button (v0.8.1), full display the full source name (v0.9.1).
+      # show_progress	boolean	false	v0.8.3	Display a progress bar when media progress information is available.
+      # show_shuffle	boolean	false	v0.8.9	Display a shuffle button (only for players with shuffle_set support).
+      # hide_power	boolean	false	v0.7	Hide the power button.
+      # hide_controls	boolean	false	v0.8	Hide media control buttons (force short_info to true).
+      # hide_volume	boolean	false	v0.8	Hide volume controls. (force short_info to true).
+      # hide_media_info	boolean	false	v0.9.1	Hide media information.
+      # hide_mute	boolean	false	v0.8.1	Hide the mute button.
+      # hide_info	boolean	false	v0.8.4	Hide entity icon, entity name & media information.
+      # hide_icon	boolean	false	v0.8.8	Hide the entity icon.
+      # artwork	string	default	v0.4	cover to have artwork displayed as the card background, none to hide artwork.
+      # short_info	boolean	false	v0.8	Limit media information to one row.
+      # scroll_info	boolean	false	v0.8	Limit media information to one row, scroll through the overflow.
+      # power_color	boolean	false	v0.4	Make power button change color based on on/off state.
+      # artwork_border	boolean	false	v0.3	Display a border around the default media artwork.
+      # volume_stateless	boolean	false	v0.6	Swap out the volume slider for volume up & down buttons.
+      # toggle_power	boolean	true	v0.8.9	Change power button behaviour turn_off / turn_on or toggle
+      # consider_idle_after	number	optional	v0.8.9	Specify a number (minutes) only supported on players with media_position_updated_at) after which the player displays as idle.
+      # consider_pause_idle	boolean	false	v0.9.1	Display the player as idle when player is paused
+      # more_info	boolean	true	v0.1	Enable the "more info" dialog when pressing on the card.
+      # max_volume	number	true	v0.8.2	Max volume for the volume slider (number between 1 - 100).
+      # background	string	optional	v0.8.6	Background image, specify the image url "/local/background-img.png" e.g.
+
+  - url: /local/custom-lovelace/monster-card.js?v=1
+    type: js
+      # - type: custom:monster-card
+        # card:
+        #   type: glance
+        #   title: Monster
+        # filter:
+        #   include:
+        #     - domain: device_tracker
+        #       options:
+        #         secondary_info: last-changed
+        #         type: "custom:state-card-custom"
+        #       attributes:
+        #         battery: 53
+        #         source_type: gps
+        #   exclude:
+        #     - state: 'off'
+        #     - state: 'unavailable'
+        # when:
+        #   entity: device_tracker.demo_paulus
+        #   state: not_home
+      #############
+          #|= type	                string	Required	custom:monster-card
+          #|= card	                object	Required	Card object
+          #|    type	              string	Required	A type of card (ex.glance) from lovelace
+          #|    title	              object	optional	Title of the card
+          #|    ...	                other	  optional	Other parameters supported by card type above
+          #|= filter	              object	Required	include and exclude sections
+          #|    include
+          #|    exclude:
+          #|      domain	          string	optional	Filter all entities that match the domain
+          #|      state	            string	optional	Match entities that match state. Note, in YAML, make sure you wrap it in quotes to make sure it is parsed as a string.
+          #|      entity_id	        string	optional	Filter entities by id, supports wildcards (*living_room*). Case insensitive
+          #|      name	            string	optional	Filter entities by friendly_name or title, supports wildcards (*kitchen*). Case insensitive
+          #|=     attributes	      object	optional	Filter entities by attributes object
+          #|        ...                               eg temperature, battery,...
+          #|=     options	          object	optional	Provide additional configuration options to entities
+          #|        secondary_info                    eg last-changed, entity_id
+          #|        type
+          #|        name
+          #|        icon
+          #|= show_empty            boolean true	    Show/hide empty card
+          #|= when	                object	optional	Extra condition for show/hide
+          #|    entity	            string	Required	Entity to use for state comparison
+          #|    state	              any	    Required	The state of the entity to use for showing the monster-card
+
+excluded_entities:
+  - input_number.ticker_fx
+
+views:
+#-----------------------------------------------------------------------------#
+#* DASHBOARD NEW
+
+  - id: newdash
+    title: Dashboard
+    icon: mdi:home-circle
+    badges:
+      - input_boolean.view_options
+      - input_boolean.view_details
+      - input_boolean.view_debug
+    cards:
+      - id: newdash_1   # ticker, presence, scenes/tasks
+        type: vertical-stack
+        cards:
+          - id: newdash_ticker
+            type: picture-entity
+            show_name: false
+            show_state: true
+            entity: sensor.ticker
+            image: /local/pics/darkgrey.png
+            aspect_ratio: 8x1
+            
+          - id: newdash_presence
+            type: entities
+            title: Anwesenheit
+            show_header_toggle: false
+            entities:
+              - type: custom:fold-entity-row
+                head: sensor.michbaeck
+                name: michbaeck
+                open: false
+                items:
+                  - entity: input_select.michbaeck
+                    name: Ort
+                  - entity: input_select.daily_routine
+                    name: Routine
+                  - entity: proximity.home
+                    name: Distanz
+                  - entity: sensor.dir_of_travel
+                    name: Richtung
+              - entity: sensor.johannes
+
+          - id: newdash_scenes
+            title: Szenen
+            type: entities
+            show_header_toggle: false
+            entities:
+              - entity: script.wakeup
+                name: Aufstehen
+              - entity: script.bedtime_actions
+                name: Schlafen gehen
+              - entity: input_boolean.alexa_toggle
+                name: Alexa
+
+      - id: newdash_light
+        type: vertical-stack
+        cards:
+          - title: Licht
+            type: entities
+            show_header_toggle: false
+            entities:
+              - type: custom:fold-entity-row    # flux
+                head:  sensor.flux
+                items: 
+                  # - type: custom:slider-entity-row
+                  - entity: input_number.flux_adjust
+                  - entity: sensor.sun_elevation
+              - type: custom:fold-entity-row    # kueche
+                head:  light.kueche
+                name: Küche
+                items: 
+                  - type: custom:slider-entity-row
+                    entity: light.kueche
+                    name: Dimmer
+                  - entity: sensor.light_kueche
+                    name: Lichtsensor
+                  - entity: binary_sensor.motion_kueche
+                    name: Bewegungsmelder
+              - type: custom:fold-entity-row    # flur
+                head:  light.flur
+                name: Flur
+                items: 
+                  - type: custom:slider-entity-row
+                    entity: light.flur
+                    name: Dimmer
+                  - entity: light.flur_links
+                    name: Links
+                  - entity: light.flur_rechts
+                    name: Rechts
+                  - entity: sensor.light_flur
+                    name: Lichtsensor
+                  - entity: binary_sensor.motion_flur
+                    name: Bewegungsmelder
+              - type: custom:fold-entity-row    # bad
+                head:  light.bad
+                items: 
+                  - entity: sensor.light_bad
+                    name: Lichtsensor
+                  - entity: binary_sensor.motion_bad
+                    name: Bewegungsmelder
+              - type: custom:fold-entity-row    # wohnzimmer
+                head:  light.wohnzimmer
+                name: Wohnzimmer
+                items: 
+                  - type: custom:slider-entity-row
+                    entity: light.wohnzimmer
+                    name: Dimmer
+              - type: custom:fold-entity-row    # michbaeck auto
+                head: light.michbaeck_auto
+                name: AutoDimmer michbaeck
+                items: 
+                  - type: custom:slider-entity-row
+                    entity: light.michbaeck_auto
+                    name: Dimmer anpassen
+                  - entity: input_boolean.light_michbaeck_color
+                  - entity: input_boolean.light_michbaeck_boost
+                    name: Boost Dimmer
+                  - entity: sensor.light_michbaeck_1_target
+                    name: Lux SOLL
+                  - entity: sensor.light_michbaeck_1_pct
+                    name: Lux IST
+                  - entity: sensor.brightness_michbaeck_dimmer
+                    name: Helligkeit Lampen
+                  - entity: sensor.light_michbaeck_auto
+                    name: Dimmer Status
+                #. group_config:
+                #.   secondary_info: entity-id
+                open: false
+              - type: custom:fold-entity-row    # michbaeck lights
+                head: light.michbaeck_all
+                name: Lampen michbaeck
+                open: false
+                items:
+                  - type: custom:slider-entity-row
+                    entity: light.michbaeck_all
+                    name: ALLE
+                  - type: custom:slider-entity-row
+                    entity: light.grosses_licht
+                  - type: custom:slider-entity-row
+                    entity: light.stehlampe
+                  - type: custom:slider-entity-row
+                    entity: light.schreibtisch
+                  - type: custom:slider-entity-row
+                    entity: light.regal
+                  - type: custom:slider-entity-row
+                    entity: light.ikea
+                  - type: custom:slider-entity-row
+                    entity: light.bett
+                  - type: custom:slider-entity-row
+                    entity: light.xiaomi_gateway
+          - type: glance
+            # title: Motion
+            show_state: false
+            entities:
+              - entity: binary_sensor.motion_kueche
+                name: Küche
+              - entity: binary_sensor.motion_flur
+                name: Flur
+              - entity: binary_sensor.motion_bad
+                name: Bad
+              - entity: binary_sensor.motion_michbaeck_1
+                name: "michb.1"
+
+      - id: newdash_climate
+        type: vertical-stack
+        cards:
+          - title: Klima
+            type: entities
+            show_header_toggle: false
+            entities:
+              - entity: sensor.temp_aussen
+              - entity: sensor.temp_flur
+              - type: custom:fold-entity-row    # kueche
+                head:  climate.kueche
+                name: Küche
+                items: 
+                  - entity: sensor.temp_kueche
+                    name: Temperatur
+                  - entity: sensor.humidity_kueche
+                    name: Luftfeuchtigkeit
+                  - entity: binary_sensor.window_kueche
+                    name: Fenster
+                  - entity: switch.climate_kueche
+                    name: Radiator
+              - type: custom:fold-entity-row    # bad
+                head:  climate.bad
+                name: Bad
+                items: 
+                  - entity: sensor.temp_bad
+                    name: Temperatur
+                  - entity: binary_sensor.window_bad
+                    name: Fenster
+                  - entity: switch.climate_bad
+                    name: Radiator
+              - type: custom:fold-entity-row    # michbaeck
+                head:  climate.michbaeck
+                name: michbaeck
+                items: 
+                  - entity: sensor.temp_michbaeck
+                    name: Temperatur
+                  - entity: binary_sensor.door_michbaeck
+                    name: Tür
+                  - entity: binary_sensor.window_michbaeck_1
+                    name: Fenster 1
+                  - entity: binary_sensor.window_michbaeck_2
+                    name: Fenster 2
+                  - entity: switch.climate_michbaeck
+                    name: Radiator
+              - type: custom:fold-entity-row    # michbaeck AC
+                head:  climate.michbaeck_ac
+                name: michbaeck AC
+                items: 
+                  - entity: fan.michbaeck
+              #. - entity: switch.boiler
+              - entity: input_boolean.climate_automatic
+          - type: glance
+            # title: Türen & Fenster
+            show_state: false
+            entities:
+              - entity: binary_sensor.door_michbaeck
+                name: michbaeck
+                icon: mdi:door
+              - entity: binary_sensor.window_michbaeck_1
+                name: michb.1
+              - entity: binary_sensor.window_michbaeck_2
+                name: michb.2
+              - entity: binary_sensor.window_kueche
+                name: Küche
+              - entity: binary_sensor.window_bad
+                name: Bad
+
+      # - id: newdash_2
+      #   type: vertical-stack
+      #   cards:
+
+      - id: newdash_spotify
+        type: media-control
+        entity: media_player.spotify
+
+      - id: newdash_plants
+        title: Pflanzen
+        type: entities
+        show_header_toggle: false
+        entities:
+          - type: custom:fold-entity-row    # plant 1
+            head:  sensor.plant_michbaeck_1
+            items:
+              - entity: automation.plant_1_issue
+                name: Pobleme melden
+
+          - type: custom:fold-entity-row    # plant 2
+            head:  sensor.plant_michbaeck_2
+            items: 
+              - entity: binary_sensor.plant_michbaeck_2_water
+                name: Wassertank
+              - entity: automation.plant_2_issue
+                name: Pobleme melden
+              - entity: switch.plant_michbaeck_2_water
+                name: Gießen
+              - entity: automation.plant_2_water
+                name: Automatisch gießen
+          - type: custom:fold-entity-row    # settings
+            head:  
+              type: section
+              label: Einstellungen
+            items: 
+              - entity: script.plant_update
+                name: Jetzt aktualisieren
+              - entity: script.plant_update_voice
+                name: Aktualisieren (Alexa)
+              #. - entity: automation.plant_1_water
+                #. name: Automatisch gießen
+              - entity: automation.plant_water_empty
+                name: Leere Tanks melden
+
+      - id: newdash_devices
+        type: entities
+        title: Geräte
+        show_header_toggle: false
+        entities:
+          - entity: switch.computer
+          - entity: switch.drucker
+          - entity: switch.loetkolben
+          - entity: switch.rcswitch3
+
+#-----------------------------------------------------------------------------#
+#* ROOMS
+  - id: room
+    title: Räume
+    badges:
+      - input_boolean.view_options
+      - input_boolean.view_details
+      - input_boolean.view_debug
+    cards:
+      - id: room_michbaeck
+        type: vertical-stack
+        cards:
+          - type: horizontal-stack
+            cards:
+              - type: entity-button
+                entity: light.michbaeck_auto
+                name: Auto-Dimmer
+              - type: entity-button
+                entity: climate.michbaeck
+          - type: glance
+            title: michbaeck
+            show_state: false
+            entities:
+              - entity: climate.michbaeck_ac
+                name: AC
+              - entity: fan.michbaeck
+                name: Ventilator
+              - entity: binary_sensor.door_michbaeck
+                name: Tür
+                icon: mdi:door
+              - entity: binary_sensor.window_michbaeck_1
+                name: Fenster 1
+              - entity: binary_sensor.window_michbaeck_2
+                name: Fenster 2
+              - entity: light.grosses_licht
+                name: Grosses Licht
+              - entity: light.stehlampe
+                name: Stehlampe
+              - entity: light.schreibtisch
+                name: Schreibtisch
+              - entity: light.ikea
+                name: IKEA
+              - entity: light.regal
+                name: Regal
+              - entity: light.bett
+                name: Bett
+              - entity: light.xiaomi_gateway
+                name: Xiaomi
+              - entity: binary_sensor.motion_michbaeck_1
+                name: Motion
+          - type: horizontal-stack
+            cards:
+              - type: sensor
+                entity: sensor.plant_michbaeck_1
+                name: Pflanze 1
+                graph: none
+              - type: sensor
+                entity: sensor.plant_michbaeck_2
+                name: Pflanze 2
+                graph: none
+              - type: sensor
+                entity: sensor.light_michbaeck_1
+                name: Lux 1
+                graph: none
+              - type: sensor
+                entity: sensor.light_michbaeck_2
+                name: Lux 2
+                graph: none
+          - type: custom:mini-graph-card
+            entity: sensor.temp_michbaeck
+            unit: °C
+            height: 100
+            line_width: 4
+            line_color: var(--toggle-button-color)
+            hours_to_show: 6
+            accuracy: 24
+            more_info: true
+            font_size: 50    # percent
+            line_value_above: 21
+            line_color_above: var(--google-red-500)
+            line_value_below: 19
+            line_color_below: var(--dark-primary-color)
+            hide_icon: false
+
+      - id: room_kueche
+        type: vertical-stack
+        cards:
+          - type: horizontal-stack
+            cards:
+              - type: entity-button
+                entity: light.kueche
+                name: Küche
+              - type: entity-button
+                entity: climate.kueche
+          - type: glance
+            title: Küche
+            show_state: false
+            entities:
+              - entity: light.esstisch
+                name: 'Esstisch'
+              - entity: binary_sensor.window_kueche
+                name: Fenster
+              - entity: binary_sensor.motion_kueche
+                name: Motion
+              - entity: sensor.light_kueche
+                name: Lux
+          - type: custom:mini-graph-card
+            entity: sensor.temp_kueche
+            unit: °C
+            height: 100
+            line_width: 4
+            line_color: "var(--toggle-button-color)"
+            hours_to_show: 6
+            accuracy: 24
+            more_info: true
+            font_size: 50    # percent
+            line_value_above: 21
+            line_color_above: "var(--google-red-500)"
+            line_value_below: 19
+            line_color_below: "var(--dark-primary-color)"
+            hide_icon: false
+
+      - id: room_bad
+        type: vertical-stack
+        cards:
+          - type: horizontal-stack
+            cards:
+              - type: entity-button
+                entity: light.bad
+                name: Bad
+              - type: entity-button
+                entity: climate.bad
+          - type: glance
+            title: Bad
+            show_state: false
+            entities:
+              - entity: light.bad
+                name: Licht
+              - entity: binary_sensor.window_bad
+                name: Fenster
+              - entity: binary_sensor.motion_bad
+                name: Motion
+              - entity: sensor.light_bad
+                name: Lux
+          - type: custom:mini-graph-card
+            entity: sensor.temp_bad
+            name: Temperatur Bad
+            unit: °C
+            height: 100
+            line_width: 4
+            line_color: "var(--toggle-button-color)"
+            hours_to_show: 6
+            accuracy: 24
+            more_info: true
+            font_size: 50    # percent
+            line_value_above: 21
+            line_color_above: "var(--google-red-500)"
+            line_value_below: 19
+            line_color_below: "var(--dark-primary-color)"
+            hide_icon: false
+
+      - id: room_flur
+        type: vertical-stack
+        cards:
+          - type: glance
+            title: Flur
+            show_state: false
+            entities:
+              - entity: light.flur
+                name: Flur
+              - entity: light.flur_links
+                name: Links
+              - entity: light.flur_rechts
+                name: Rechts
+              - entity: binary_sensor.motion_flur
+                name: Motion
+              - entity: sensor.light_flur
+                name: Lux
+          - type: custom:mini-graph-card
+            entity: sensor.temp_flur
+            name: Temperatur Flur
+            unit: °C
+            height: 100
+            line_width: 4
+            line_color: "var(--toggle-button-color)"
+            hours_to_show: 6
+            accuracy: 24
+            more_info: true
+            font_size: 50    # percent
+            line_value_above: 21
+            line_color_above: "var(--google-red-500)"
+            line_value_below: 19
+            line_color_below: "var(--dark-primary-color)"
+            hide_icon: false
+
+      - id: room_wohnzimmer
+        type: vertical-stack
+        cards:
+          - type: glance
+            title: Wohnzimmer
+            show_state: false
+            entities:
+              - entity: light.wohnzimmer
+                name: Licht
+
+#-----------------------------------------------------------------------------#
+#* LIGHT
+  - id: light
+    title: Licht
+    icon: mdi:lightbulb-on
+    badges:
+      - input_boolean.view_options
+      - input_boolean.view_details
+      - input_boolean.view_debug
+    cards:
+      - id: light_michbaeck_1
+        type: vertical-stack
+        cards:
+          - id: light_michbaeck_1_1
+            type: light
+            entity: light.michbaeck_auto
+          - id: light_michbaeck_1_2
+            type: custom:monster-card
+            card:
+              type: entities
+              title: Details
+            filter:
+              include:
+                - entity_id: sensor.brightness_michbaeck_dimmer
+                - entity_id: sensor.light_michbaeck_*
+                  options:
+                    secondary_info: entity-id
+                - entity_id: script.light_michbaeck_*
+                  options:
+                    secondary_info: entity-id
+            when:
+              entity: input_boolean.view_details
+              state: 'on'
+          - id: light_michbaeck_1_2
+            type: entities
+            entities:
+              - entity: light.grosses_licht
+                name: 'Grosses Licht'
+              - entity: light.stehlampe
+                name: Stehlampe
+              - entity: light.schreibtisch
+                name: Schreibtisch
+              - entity: light.ikea
+                name: IKEA
+              - entity: light.regal
+                name: Regal
+              - entity: light.bett
+                name: Bett
+              # - id: light_michbaeck_1_1_2
+              #   type: horizontal-stack
+              #   cards:
+              #     - id: light_michbaeck_1_1_2_1
+              #       type: sensor
+              #       entity: sensor.light_michbaeck_1_pct
+              #       graph: none
+              #       name: IST
+              #     - id: light_michbaeck_1_1_2_2
+              #       type: sensor
+              #       entity: sensor.light_michbaeck_1_target
+              #       graph: none
+              #       name: SOLL
+
+      - id: light_all
+        type: entities
+        title: Räume
+        entities:
+          - entity: light.kueche
+            name: Küche
+          - entity: light.flur
+            name: Flur
+          - entity: light.bad
+            name: Bad
+          - entity: light.wohnzimmer
+            name: Wohnzimmer
+
+      - id: light_motion
+        type: vertical-stack
+        cards:
+          - id: light_motion_1
+            type: glance
+            show_state: false
+            entities:
+              - entity: binary_sensor.motion_kueche
+                name: Küche
+              - entity: binary_sensor.motion_flur
+                name: Flur
+              - entity: binary_sensor.motion_bad
+                name: Bad
+              - entity: binary_sensor.motion_michbaeck_1
+                name: "michb.1"
+              # - entity: binary_sensor.motion_michbaeck_2
+              #   name: "michb.2"
+          # - id: light_motion_2
+          #   type: history-graph
+          #   hours_to_show: 6
+          #   entities:
+          #     - entity: binary_sensor.motion_kueche
+          #       name: Küche
+          #     - entity: binary_sensor.motion_flur
+          #       name: Flur
+          #     - entity: binary_sensor.motion_bad
+          #       name: Bad
+          #     - entity: binary_sensor.motion_michbaeck_1
+          #       name: michb.1
+          #     - entity: binary_sensor.motion_michbaeck_2
+          #       name: michb.2
+
+      - id: light_entities
+        type: custom:monster-card
+        card:
+          type: entities
+          title: All lights
+        filter:
+          include:
+            - domain: light
+              options:
+                secondary_info: entity-id
+        when:
+          entity: input_boolean.view_debug
+          state: 'on'
+
+      # - id: light_4
+      #   type: entities
+      #   title: placeholder
+      #   entities:
+      #     - entity: sensor.config_version
+      # - id: light_5
+      #   type: entities
+      #   title: placeholder
+      #   entities:
+      #     - entity: sensor.config_version
+      # - id: light_6
+      #   type: entities
+      #   title: placeholder
+      #   entities:
+      #     - entity: sensor.config_version
+
+#-----------------------------------------------------------------------------#
+#* CLIMATE
+  # - id: climate
+    # title: Klima
+    # icon: mdi:thermometer
+    # badges:
+    #   - input_boolean.view_options
+    #   - input_boolean.view_details
+    #   - input_boolean.view_debug
+    # cards:
+    #   - id: climate_1
+    #     type: vertical-stack
+    #     cards:
+    #      # michbaeck
+    #       - type: thermostat
+    #         entity: climate.michbaeck
+    #       - type: glance
+    #         show_state: false
+    #         entities:
+    #           - entity: binary_sensor.door_michbaeck
+    #             name: Tür
+    #             icon: mdi:door
+    #           - entity: binary_sensor.window_michbaeck_1
+    #             name: Fenster 1
+    #           - entity: binary_sensor.window_michbaeck_2
+    #             name: Fenster 2
+    #       - type: custom:mini-graph-card
+    #         entity: sensor.temp_michbaeck
+    #         unit: °C
+    #         height: 100
+    #         line_width: 4
+    #         line_color: var(--toggle-button-color)
+    #         hours_to_show: 6
+    #         accuracy: 24
+    #         more_info: true
+    #         font_size: 50    # percent
+    #         line_value_above: 21
+    #         line_color_above: var(--google-red-500)
+    #         line_value_below: 19
+    #         line_color_below: var(--dark-primary-color)
+    #         hide_icon: false
+
+    #   # kueche
+    #   - id: climate_2
+    #     type: vertical-stack
+    #     cards:
+    #       - type: thermostat
+    #         entity: climate.kueche
+    #       - type: horizontal-stack
+    #         cards:
+    #           - type: glance
+    #             show_state: false
+    #             entities:
+    #               - entity: binary_sensor.window_kueche
+    #                 name: Fenster
+    #       - type: custom:mini-graph-card
+    #         entity: sensor.temp_kueche
+    #         unit: °C
+    #         height: 100
+    #         line_width: 4
+    #         line_color: var(--toggle-button-color)
+    #         hours_to_show: 6
+    #         accuracy: 24
+    #         more_info: true
+    #         font_size: 50    # percent
+    #         line_value_above: 21
+    #         line_color_above: var(--google-red-500)
+    #         line_value_below: 19
+    #         line_color_below: var(--dark-primary-color)
+    #         hide_icon: false
+
+    #   # bad
+    #   - id: climate_3
+    #     type: vertical-stack
+    #     cards:
+    #       - type: thermostat
+    #         entity: climate.bad
+    #       - type: horizontal-stack
+    #         cards:
+    #           - type: glance
+    #             show_state: false
+    #             entities:
+    #               - entity: binary_sensor.window_bad
+    #                 name: Fenster
+    #       - type: custom:mini-graph-card
+    #         entity: sensor.temp_bad
+    #         unit: °C
+    #         height: 100
+    #         line_width: 4
+    #         line_color: var(--toggle-button-color)
+    #         hours_to_show: 6
+    #         accuracy: 24
+    #         more_info: true
+    #         font_size: 50    # percent
+    #         line_value_above: 21
+    #         line_color_above: var(--google-red-500)
+    #         line_value_below: 19
+    #         line_color_below: var(--dark-primary-color)
+    #         hide_icon: false
+
+
+    #   - id: climate_entities
+    #     type: custom:monster-card
+    #     card:
+    #       type: entities
+    #       title: All climate
+    #     filter:
+    #       include:
+    #         - domain: climate
+    #           options:
+    #             secondary_info: entity-id
+    #     when:
+    #       entity: input_boolean.view_debug
+    #       state: 'on'
+
+      # - id: climate_4
+        # type: entities
+        # title: placeholder
+        # entities:
+        #   - entity: sensor.config_version
+      # - id: climate_5
+        # type: entities
+        # title: placeholder
+        # entities:
+        #   - entity: sensor.config_version
+      # - id: climate_6
+        # type: entities
+        # title: placeholder
+        # entities:
+        #   - entity: sensor.config_version
+
+#-----------------------------------------------------------------------------#
+#* SLEEP
+  - id: sleep
+    title: Sleep Cycle
+    icon: mdi:alarm
+    badges:
+      - input_boolean.view_options
+      - input_boolean.view_details
+      - input_boolean.view_debug
+    cards:
+      - id: sleep_cycle_1
+        type: vertical-stack
+        cards:
+          - id: sleep_cycle_1_1
+            type: entities
+            title: Wecker
+            show_header_toggle: false
+            entities:
+              - entity: input_datetime.alarm
+              - entity: input_datetime.leave_home
+              - entity: calendar.arbeit
+              - entity: binary_sensor.workday_sensor
+              - entity: input_boolean.asleep
+              - entity: sensor.bed_load
+              - entity: sensor.bed_load_step
+              - entity: sensor.sleep_cycle
+              - entity: sensor.sleep_cycle_lowpass
+              - entity: sensor.sleep_cycle_ratio
+              - entity: sensor.sleep_cycle_ratio_lowpass
+          - type: gauge
+            title: Last
+            unit_of_measurement: 'kg'
+            entity: sensor.bed_load
+            severity:
+              green: 0
+              yellow: 50
+              red: 100
+          # - id: sleep_cycle_1_2
+            # type: custom:mini-graph-card
+            # entity: sensor.bed_load
+            # hours_to_show: 6
+            # hide_icon: true
+            # name: Load
+            # height: 75
+            # font_size: 50
+            # line_color: '#3F51B5'
+            # line_value_above: 50
+            # line_color_below: '#b00020'
+          # - id: sleep_cycle_1_3
+            # type: custom:mini-graph-card
+            # entity: sensor.bed_load_step
+          # - id: sleep_cycle_1_4
+            # name: Schlafphasen
+            # type: custom:mini-graph-card
+            # entity: sensor.sleep_cycle_ratio
+            # hours_to_show: 6
+            # hide_icon: true
+            # height: 75
+            # font_size: 50
+            # line_color: '#3F51B5'
+            # line_value_above: 90
+            # line_color_above: '#b00020'
+      
+      - id: sleep_cycle_2
+        type: vertical-stack
+        cards:
+          - type: history-graph
+            title: Last
+            hours_to_show: 1
+            refresh_interval: 60
+            entities:
+              - entity: sensor.bed_load
+          - type: history-graph
+            title: Laständerung
+            hours_to_show: 1
+            refresh_interval: 60
+            entities:
+              - entity: sensor.bed_load_step
+          - type: history-graph
+            title: Bewegung
+            hours_to_show: 1
+            refresh_interval: 10
+            entities:
+              - entity: sensor.sleep_cycle
+              - entity: sensor.sleep_cycle_lowpass
+                name: Lowpass
+          - type: history-graph
+            title: Phasen
+            hours_to_show: 1
+            refresh_interval: 10
+            entities:
+              - entity: sensor.sleep_cycle_ratio
+              - entity: sensor.sleep_cycle_ratio_lowpass
+                name: Lowpass
+              - entity: sensor.sleep_cycle_helper
+
+      # - id: sleep_cycle_3
+        # type: entities
+        # title: placeholder
+        # entities:
+        #   - entity: sensor.config_version
+      # - id: sleep_cycle_4
+        # type: entities
+        # title: placeholder
+        # entities:
+        #   - entity: sensor.config_version
+
+#-----------------------------------------------------------------------------#
+#* MEDIA
+  - id: media
+    title: Media
+    icon: mdi:music-note
+    badges:
+      - input_boolean.view_options
+      - input_boolean.view_details
+      - input_boolean.view_debug
+    cards:
+      - id: media_1
+        type: media-control
+        entity: media_player.spotify
+
+      - id: media_2
+        type: media-control
+        entity: media_player.stereopaar
+
+      - id: media_3
+        type: media-control
+        entity: media_player.uberall
+
+      - id: media_4
+        type: entities
+        title: placeholder
+        entities:
+          - entity: input_select.alexa_device
+          - entity: input_select.alexa_content
+          - entity: script.alexa_play
+          - entity: input_number.alexa_volume
+          - entity: script.alexa_volume
+          - entity: script.alexa_pause
+          - entity: input_text.alexa_say
+          - entity: script.alexa_say
+          - entity: script.all_media_off
+
+
+      - id: media_entities
+        type: custom:monster-card
+        card:
+          type: entities
+          title: All media players
+        filter:
+          include:
+            - domain: media_player
+              options:
+                secondary_info: entity-id
+        when:
+          entity: input_boolean.view_debug
+          state: 'on'
+
+#-----------------------------------------------------------------------------#
+#* SYSTEM STATUS
+
+  - id: system
+    title: System Status
+    icon: mdi:home-automation
+    badges:
+      - input_boolean.view_options
+      - input_boolean.view_details
+      - input_boolean.view_debug
+    cards:
+      - id: system_4
+        type: vertical-stack
+        cards:
+          - type: markdown
+            #.title: Debugging
+            content: >
+              ## Debugging
+
+              Type a regex string to compare with service names. 
+              e.g. [ **script\\.|light\\.** ] will log all services starting with either "script." or "light.".
+              Apply patterns **carefully** and enable debug_log below.
+          - type: entities
+            title: Regex String
+            show_header_toggle: false
+            entities:
+              - entity: input_text.debug_regex
+              - entity: input_boolean.debug_log
+
+      - id: system_2
+        type: custom:monster-card
+        card:
+          type: entities
+        filter:
+          include:
+            - domain: variable
+
+      - id: system_1    # ESP devices
+        type: entities
+        title: ESP nodes
+        entities:
+          - entity: sensor.esp01
+          - type: weblink
+            url: http://esp01
+            name: esp01 - Pflanze 1 & RF
+          # - type: custom:entity-attributes-card
+            # filter:
+            #   include:
+            #     - key: sensor.esp01.uptime
+            #     - key: sensor.esp01.ip
+            #     - key: sensor.esp01.rssi
+            #     - key: sensor.esp01.plugin
+            #     - key: sensor.esp01.last*
+          - entity: sensor.esp02
+          - type: weblink
+            url: http://esp02
+            name: esp02 - Aussen
+          # - type: custom:entity-attributes-card
+            # filter:
+            #   include:
+            #     - key: sensor.esp02.uptime
+            #     - key: sensor.esp02.ip
+            #     - key: sensor.esp02.rssi
+            #     - key: sensor.esp02.plugin
+            #     - key: sensor.esp02.last*
+          - entity: sensor.esp04
+          - type: weblink
+            url: http://esp04
+            name: esp04 - michbaeck Thermostat
+          # - type: custom:entity-attributes-card
+            # filter:
+            #   include:
+            #     - key: sensor.esp04.uptime
+            #     - key: sensor.esp04.ip
+            #     - key: sensor.esp04.rssi
+            #     - key: sensor.esp04.plugin
+            #     - key: sensor.esp04.last*
+          - entity: sensor.esp05
+          - type: weblink
+            url: http://esp05
+            name: esp05 - Bad Sensoren
+          # - type: custom:entity-attributes-card
+            # filter:
+            #   include:
+            #     - key: sensor.esp05.uptime
+            #     - key: sensor.esp05.ip
+            #     - key: sensor.esp05.rssi
+            #     - key: sensor.esp05.plugin
+            #     - key: sensor.esp05.last*
+          - entity: sensor.esp07
+          - type: weblink
+            url: http://esp07
+            name: esp07 - Ventilator
+          # - type: custom:entity-attributes-card
+            # filter:
+            #   include:
+            #     - key: sensor.esp07.uptime
+            #     - key: sensor.esp07.ip
+            #     - key: sensor.esp07.rssi
+            #     - key: sensor.esp07.plugin
+            #     - key: sensor.esp07.last*
+          - entity: sensor.esp10
+          - type: weblink
+            url: http://esp10
+            name: esp10 - michbaeck Fenster 2
+          # - type: custom:entity-attributes-card
+            # filter:
+            #   include:
+            #     - key: sensor.esp10.uptime
+            #     - key: sensor.esp10.ip
+            #     - key: sensor.esp10.rssi
+            #     - key: sensor.esp10.plugin
+            #     - key: sensor.esp10.last*
+          - entity: sensor.esp11
+          - type: weblink
+            url: http://esp11
+            name: esp11 - Bett
+          # - type: custom:entity-attributes-card
+            # filter:
+            #   include:
+            #     - key: sensor.esp11.uptime
+            #     - key: sensor.esp11.ip
+            #     - key: sensor.esp11.rssi
+            #     - key: sensor.esp11.plugin
+            #     - key: sensor.esp11.last*
+          - type: weblink
+            url: http://esp50
+            name: sonofftouch01 - Bad Licht
+          - type: weblink
+            url: http://esp51
+            name: sonoff01 - Küche Heizung
+          - type: weblink
+            url: http://esp52
+          - type: weblink
+            url: http://esp53
+          - type: weblink
+            url: http://esp54
+            name: sonoff04 - Bad Heizung
+          - type: weblink
+            url: http://esp55
+            name: sonoff05 - michbaeck Heizung
+
+      - id: system_3
+        type: custom:monster-card
+        card:
+          type: glance
+        filter:
+          include:
+            - domain: device_tracker
+
+#-----------------------------------------------------------------------------#
+#* automation
+
+  - id: automation
+    title: ALL Automations
+    icon: mdi:settings
+    badges:
+      - input_boolean.view_options
+      - input_boolean.view_details
+      - input_boolean.view_debug
+    cards:
+      - id: automation_all
+        type: custom:monster-card
+        card:
+          type: entities
+        filter:
+          include:
+            - domain: automation
+              options:
+                secondary_info: entity-id
+
+      # - id: automation_2
+        # type: entities
+        # title: placeholder
+        # entities:
+        #   - entity: sensor.config_version
+      # - id: automation_3
+        # type: entities
+        # title: placeholder
+        # entities:
+        #   - entity: sensor.config_version
+      # - id: automation_4
+        # type: entities
+        # title: placeholder
+        # entities:
+        #   - entity: sensor.config_version
+
+#-----------------------------------------------------------------------------#
+#* script
+  - id: script
+    title: ALL Scripts
+    icon: mdi:code-braces
+    badges:
+      - input_boolean.view_options
+      - input_boolean.view_details
+      - input_boolean.view_debug
+    cards:
+      - id: script_all
+        type: custom:monster-card
+        card:
+          type: entities
+        filter:
+          include:
+            - domain: script
+              options:
+                secondary_info: entity-id
+
+      # - id: script_2
+        # type: entities
+        # title: placeholder
+        # entities:
+        #   - entity: sensor.config_version
+      # - id: script_3
+        # type: entities
+        # title: placeholder
+        # entities:
+        #   - entity: sensor.config_version
+      # - id: script_4
+        # type: entities
+        # title: placeholder
+        # entities:
+        #   - entity: sensor.config_version
+
+#-----------------------------------------------------------------------------#
+#* input
+  - id: input
+    title: ALL Inputs
+    icon: mdi:keyboard-variant
+    badges:
+      - input_boolean.view_options
+      - input_boolean.view_details
+      - input_boolean.view_debug
+    cards:
+      - id: input_bool
+        type: custom:monster-card
+        card:
+          type: entities
+        filter:
+          include:
+            - domain: input_boolean
+              options:
+                secondary_info: entity-id
+
+      - id: input_select
+        type: custom:monster-card
+        card:
+          type: entities
+        filter:
+          include:
+            - domain: input_select
+              options:
+                secondary_info: entity-id
+
+      - id: input_datetime
+        type: custom:monster-card
+        card:
+          type: entities
+        filter:
+          include:
+            - domain: input_datetime
+              options:
+                secondary_info: entity-id
+
+      - id: input_number
+        type: custom:monster-card
+        card:
+          type: entities
+        filter:
+          include:
+            - domain: input_number
+              options:
+                secondary_info: entity-id
+
+      - id: input_text
+        type: custom:monster-card
+        card:
+          type: entities
+        filter:
+          include:
+            - domain: input_text
+              options:
+                secondary_info: entity-id
+
+      # - id: input_2
+        # type: entities
+        # title: placeholder
+        # entities:
+        #   - entity: sensor.config_version
+      # - id: input_3
+        # type: entities
+        # title: placeholder
+        # entities:
+        #   - entity: sensor.config_version
+      # - id: input_4
+        # type: entities
+        # title: placeholder
+        # entities:
+        #   - entity: sensor.config_version
+
+#-----------------------------------------------------------------------------#
+#* DEVELOPMENT
+  - id: dev
+    title: DEVELOPMENT
+    icon: mdi:visual-studio-code
+    badges:
+      - input_boolean.view_options
+      - input_boolean.view_details
+      - input_boolean.view_debug
+    cards:
+      #[x] CONDITIONAL
+      - id: dev_11
+        type: conditional
+        conditions:
+          - entity: input_boolean.view_details
+            state: 'on'
+            #.state_not
+        card:
+          type: entities
+          title: CONDITIONAL
+          entities:
+            - entity: sensor.config_version
+
+
+      #[x] CALENDAR-CARD
+      - id: dev_4
+        type: custom:calendar-card
+        name: CALENDAR-CARD
+        showProgressBar: false
+        numberOfDays: 14
+        entities:
+          - calendar.arbeit
+          - calendar.privat
+
+      # CIRCLE-SENSOR-CARD
+      - id: dev_5
+        type: custom:circle-sensor-card
+        title: CIRCLE-SENSOR-CARD
+        entity: sensor.temp_michbaeck
+        name: Temp michbaeck
+        show_card: false
+        #.attribute: 'ambient'    # use attribute instead of state
+        #.attribute_max: 'feels_like'   # use attribute as max
+        units: '°C'
+        max: 40
+        min: 0
+        show_max: true
+        fill: 'var(--card-background-color)'
+        stroke_width: 10    # circle size
+        # stroke_color: 'var(--toggle-button-color)'
+        color_stops:
+          0: 'var(--paper-blue-400)'
+          15: 'var(--paper-green-400)'
+          20: 'var(--paper-orange-400)'
+          40: 'var(--google-red-500)'
+        #! gradient: true
+        #! font_style:
+        #!   color: red
+        #!   font-size: 1.5em
+        #!   text-shadow: '2px 2px black'
+        #!   font-family: 'Trebuchet MS'
+        #! style:
+        #!   top: 50%
+        #!   left: 50%
+        #!   width: 50px
+        #!   height: 50px
+
+      #[x] FOLD-ENTITY-ROW # SLIDER-ENTIITY-ROW    
+      #[todo] try to get attributes; fold-in-fold
+      - id: dev_6
+        title: FOLD-ENTITY-ROW
+        type: entities
+        show_header_toggle: false
+        entities:
+          - type: custom:fold-entity-row
+            head:  light.michbaeck_auto
+            name: michbaeck AutoDimmer
+            items: 
+              - type: custom:slider-entity-row
+                entity: light.michbaeck_auto
+                name: Dimmer anpassen
+              - entity: sensor.light_michbaeck_1_target
+                name: Lux SOLL
+              - entity: sensor.light_michbaeck_1_pct
+                name: Lux IST
+              - entity: sensor.brightness_michbaeck_dimmer
+                name: Helligkeit Lampen
+              - entity: sensor.light_michbaeck_auto
+                name: Dimmer Status
+            group_config:
+              secondary_info: entity-id
+            open: false
+          - type: custom:fold-entity-row
+            head: light.michbaeck_all
+            name: michbaeck
+            open: false
+            items:
+              - type: custom:slider-entity-row
+                entity: light.michbaeck_all
+                name: ALLE
+              - entity: light.grosses_licht
+              - type: custom:slider-entity-row
+                entity: light.stehlampe
+              - type: custom:slider-entity-row
+                entity: light.schreibtisch
+              - type: custom:slider-entity-row
+                entity: light.regal
+              - type: custom:slider-entity-row
+                entity: light.ikea
+              - type: custom:slider-entity-row
+                entity: light.bett
+              - type: custom:slider-entity-row
+                entity: light.xiaomi_gateway
+
+      #[x] history-graph
+      - id: dev_7
+        type: history-graph
+        title: history-graph
+        hours_to_show: 6
+        refresh_interval: 60
+        entities:
+          - entity: sensor.temp_michbaeck
+            name: michbaeck
+          - entity: sensor.temp_kueche
+            name: Küche
+          - entity: sensor.temp_aussen
+            name: Aussen
+
+      # POPUP-CARD
+      - id: dev_8
+        type: entities
+        title: POPUP-CARD
+        entities:
+          - entity: sensor.config_version
+
+      #! GRAPH-CARD
+      # - id: dev_9
+        # title: GRAPH-CARD
+        # type: custom:graph-card
+        # hours_to_show: 1
+        # update_interval: 60
+        # zoom: 100
+        # entities:
+        #   - entity: sensor.temp_michbaeck
+        #     name: michbaeck
+        #     smooth: false
+        #     color: "var(--toggle-button-color)"
+        #     areaStyle: {}
+        #     # areaStyle:
+        #     #   color:
+        #     #     type: 'linear' 
+        #     #     x: 0 
+        #     #     y: 0 
+        #     #     x2: 0
+        #     #     y2: 1
+        #     #     colorStops:
+        #     #       - offset: 0
+        #     #         color: "var(--google-red-500)"
+        #     #       - offset: 1
+        #     #         color: "var(--dark-primary-color)"
+        #     #     globalCoord: false
+        #   - entity: sensor.temp_kueche
+        #     name: Küche
+        #     smooth: true
+        #     color: "red"
+        #     areaStyle: {}
+        #     # areaStyle:
+        #     #   color:
+        #     #     type: 'radial'
+        #     #     x: 0.5
+        #     #     y: 0.5
+        #     #     r: 0.5
+        #     #     colorStops:
+        #     #       - offset: 0
+        #     #         color: "var(--dark-primary-color)"
+        #     #       - offset: 1
+        #     #         color: "var(--google-red-500)"
+        #     #     globalCoord: false
+        #   - entity: sensor.temp_flur
+        #     areaStyle: {}
+        #     name: Flur
+        #   - sensor.temp_aussen
+
+      #[test] SPOTIFY-PLAYLIST-CARD
+        # modified all backgrounds with to var(--card-background-color)
+      - id: dev_10
+        type: custom:spotify-playlist-card
+        title: SPOTIFY-PLAYLIST-CARD
+        entity: sensor.spotify_listen
+        media_player: media_player.spotify
+        columns: 3
+        size: '120px'
+        show_name: false
+        show_title: true
+
+      #[x] ENTITY-ATTRIBUTES-CARD
+      - id: dev_1
+        type: vertical-stack
+        cards:
+          - id: dev_1_1
+            title: ENTITY-ATTRIBUTES-CARD
+            type: custom:entity-attributes-card
+            entity: sun.sun
+            filter:
+              include:
+                - sun.sun.elevation
+                - sensor.sun_elevation_stats_mean.min_value
+                - sensor.sun_elevation_stats_mean.max_value
+                - light.michbaeck_dimmer.min_mireds
+                - light.michbaeck_dimmer.max_mireds
+                - light.stehlampe.color_temp
+                - light.schreibtisch.color_temp
+          - id: dev_1_2
+            type: vertical-stack
+            cards:
+              - id: dev_1_2_1
+                type: entities
+                entities:
+                  - entity: input_number.flux_adjust
+              - id: dev_1_2_2
+                type: sensor
+                entity: sensor.sun_elevation
+                graph: line
+                height: 75
+                accuracy: 48
+                line_color: "var(--toggle-button-color)"
+              - id: dev_1_2_3
+                type: sensor
+                entity: sensor.flux
+                graph: line
+                height: 75
+                accuracy: 48
+                line_color: "var(--mbsecondary)"
+
+      #[x] SENSOR card
+      - id: dev_2
+        type: sensor
+        title: SENSOR CARD
+        entity: sensor.temp_michbaeck
+        name: michbaeck
+        icon: mdi:thermometer
+        graph: line   # line or none
+        unit: °C
+        height: 100
+        line_width: 4
+        line_color: "var(--toggle-button-color)"
+        hours_to_show: 1
+        accuracy: 12
+
+      #[x] MINI-GRAPH card
+      - id: dev_3
+        title: MINI-GRAPH-CARD
+        type: custom:mini-graph-card
+        entity: sensor.temp_michbaeck
+        name: " "
+        icon: mdi:thermometer
+        graph: line   # line or none
+        unit: °C
+        height: 100
+        line_width: 4
+        line_color: "var(--toggle-button-color)"
+        hours_to_show: 1
+        accuracy: 12
+        more_info: true
+        font_size: 1    # percent
+        line_value_above: 21
+        line_color_above: "var(--google-red-500)"
+        line_value_below: 19
+        line_color_below: "var(--dark-primary-color)"
+        hide_icon: false
+
+

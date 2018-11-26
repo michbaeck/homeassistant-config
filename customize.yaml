@@ -1,0 +1,158 @@
+device_tracker.00178840f658:
+  friendly_name: HUE
+device_tracker.382b7803ec63:
+  friendly_name: esp07
+device_tracker.382b7803f0aa:
+  friendly_name: esp05
+device_tracker.382b7803f0c2:
+  friendly_name: esp04
+device_tracker.382b7803fd1b:
+  friendly_name: esp01
+device_tracker.382b7804506c:
+  friendly_name: esp02
+device_tracker.382b780450b9:
+  friendly_name: esp10
+device_tracker.382b780451ad:
+  friendly_name: esp09
+device_tracker.600194a0e60e:
+  friendly_name: esp50
+device_tracker.7811dce136b6:
+  friendly_name: xiaomi_gateway
+device_tracker.807d3a6ea0c5:
+  friendly_name: esp22
+device_tracker.84f3eb0585d4:
+  friendly_name: esp11
+device_tracker.84f3eb487f01:
+  friendly_name: esp54
+device_tracker.84f3eb48b6cb:
+  friendly_name: esp55
+device_tracker.92122c034a21:
+  friendly_name: ubiquiti
+device_tracker.08e689a5ea7c:
+  friendly_name: pinky
+switch.grosses_licht:
+  hidden: true
+light.computer:
+  hidden: true
+calendar.familie:
+  hidden: true
+media_player.michaels_alexa_apps:
+  hidden: true
+media_player.michaels_echosim_beta:
+  hidden: true
+calendar.neue_kontakte:
+  hidden: true
+calendar.schulden:
+  hidden: true
+light.wohnzimmer_licht:
+  assumed_state: true
+  friendly_name: Licht Wohnzimmer
+light.wohnzimmer:
+  assumed_state: true
+  friendly_name: Licht Wohnzimmer
+light.bad:
+  friendly_name: Licht Bad
+climate.bad:
+  friendly_name: Heizung Bad
+device_tracker.cb58345aa18f4028a72da9fb0c30e6f9:
+  friendly_name: Brain
+switch.computer:
+  friendly_name: Computer
+light.flur:
+  friendly_name: Licht Flur
+climate.kueche:
+  friendly_name: Heizung Küche
+climate.michbaeck:
+  friendly_name: Heizung michbaeck
+binary_sensor.window_bad:
+  friendly_name: Fenster Bad
+binary_sensor.window_michbaeck_1:
+  friendly_name: Fenster michbaeck 1
+sensor.wetter_temperature:
+  friendly_name: Temp Wetterbericht
+binary_sensor.window_kueche:
+  friendly_name: Fenster Küche
+script.wakeup:
+  friendly_name: Aufstehen
+  icon: mdi:sleep-off
+climate.michbaeck_ac:
+  friendly_name: Klima michbaeck
+sensor.flux:
+  icon: mdi:theme-light-dark
+script.bedtime_actions:
+  friendly_name: Schlafen gehen
+  icon: mdi:sleep
+automation.bedtime_actions:
+  icon: mdi:sleep
+sensor.bed_load_raw:
+  friendly_name: Last Rohdaten
+input_number.bed_load_ref_weight:
+  friendly_name: Referenzgewicht
+switch.climate_bad:
+  friendly_name: Radiator Bad
+  icon: mdi:radiator
+switch.climate_kueche:
+  friendly_name: Radiator Küche
+  icon: mdi:radiator
+switch.climate_michbaeck:
+  friendly_name: Radiator michbaeck
+  icon: mdi:radiator
+automation.door_close:
+  hidden: true
+light.kueche:
+  friendly_name: Licht Küche
+input_select.daily_routine:
+  friendly_name: Routine
+  icon: mdi:account-clock
+proximity.home:
+  friendly_name: Entfernung
+  icon: mdi:map-marker-distance
+input_select.michbaeck:
+  friendly_name: Standort
+  icon: mdi:map-marker-radius
+sensor.michbaeck:
+  friendly_name: Standort
+  icon: mdi:map-marker-radius
+sensor.dir_of_travel:
+  friendly_name: Richtung
+  icon: mdi:near-me
+automation.loetkolben_off:
+  friendly_name: Lötkolben automatisch ausschalten
+  icon: mdi:av-timer
+sensor.daily_routine:
+  friendly_name: Routine
+  icon: mdi:account-clock
+binary_sensor.workday_sensor:
+  friendly_name: Werktag
+sensor.humidity_kueche:
+  friendly_name: Luftfeuchtigkeit Küche
+sensor.light_michbaeck_4:
+  friendly_name: Lux michbaeck (Pflanze 1)
+sensor.light_aussen:
+  friendly_name: Lux Aussen
+sensor.light_bad:
+  friendly_name: Lux Bad
+sensor.light_gateway:
+  friendly_name: Lum Xiaomi
+sensor.light_michbaeck_3:
+  friendly_name: Lux michbaeck (Tür)
+sensor.light_michbaeck_2:
+  friendly_name: Lux michbaeck (Bett)
+sensor.light_kueche:
+  friendly_name: Lux Küche
+binary_sensor.plant_michbaeck_2_water:
+  friendly_name: Pflanze michbaeck 2 Wassertank
+sensor.season:
+  friendly_name: Jahreszeit
+input_select.alexa_content:
+  friendly_name: Alexa Sender
+input_select.alexa_device:
+  friendly_name: Alexa Echo
+media_player.this_device:
+  hidden: true
+sensor.time:
+  friendly_name: Zeit
+device_tracker.dc4f2245495d:
+  friendly_name: esp51 (sonoff01 Küche)
+device_tracker.807d3a4d7af4:
+  friendly_name: esp16 (ESP01 boiler test)
