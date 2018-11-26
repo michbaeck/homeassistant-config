@@ -4363,21 +4363,21 @@
             data:
               entity_id: switch.plant_michbaeck_2_water
           - delay:
-              seconds: 5
+              seconds: 10
           - service: switch.turn_off
             data:
               entity_id: switch.plant_michbaeck_2_water
           - service: mqtt.publish
             data_template:
-              topic: /esp10/cmd
+              topic: esp10/cmd
               payload: event,plantrequest
           - wait_template: >-
-              {{ states(trigger.entity_id)|int > trigger.to_state.state|int }}
-            timeout: '00:00:10'
+              {{ states("sensor.plant_michbaeck_2")|int > trigger.to_state.state|int }}
+            timeout: '00:00:30'
           - service: notify.homeassistant_debug
             data_template:
               message: >-
-                {{ now()|string + " - automation.plant_2_watering - " + trigger.entity_id + " watered, new state: " + states(trigger.entity_id)|string }}
+                {{ now()|string + " - automation.plant_2_watering - " + trigger.entity_id + " watered, new state: " + states("sensor.plant_michbaeck_2")|string }}
 
       - id: plant_water_empty   # notify on empty water tank
         alias: plant_water_empty
