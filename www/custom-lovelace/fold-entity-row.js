@@ -75,15 +75,26 @@ class FoldRow extends Polymer.Element {
     let conf = [];
     let head = this._config.head;
     let items = this._config.items;
+
+    // makes string head to object and moves string to conf.head.entity
     if(typeof head === 'string') {
       head = {entity: head};
     }
+
+    // append head.entity to conf (conf[x].entity = 'domain.entity_name')
     conf.push(head);
+
+    // read group attributes and copy list of entities to items
     if(head.entity && head.entity.startsWith('group')) {
       items = this._hass.states[head.entity].attributes.entity_id;
     }
+
+    // makes string item to object and moves string to conf.entity
     items.forEach((i) => {
+
+      // append items.entity to conf (conf[x].entity = 'domain.entity_name')
       if(typeof i === 'string') i = {entity: i};
+      // append group_config to conf (conf[x].secondary_info = 'last-changed')
       conf.push(Object.assign(i, this._config.group_config));
     });
 

@@ -34,6 +34,7 @@ switch.grosses_licht:
   hidden: true
 light.computer:
   hidden: true
+  icon: mdi:laptop
 calendar.familie:
   hidden: true
 media_player.michaels_alexa_apps:
@@ -58,6 +59,7 @@ device_tracker.cb58345aa18f4028a72da9fb0c30e6f9:
   friendly_name: Brain
 switch.computer:
   friendly_name: Computer
+  icon: mdi:laptop
 light.flur:
   friendly_name: Licht Flur
 climate.kueche:
@@ -156,3 +158,9 @@ device_tracker.dc4f2245495d:
   friendly_name: esp51 (sonoff01 Küche)
 device_tracker.807d3a4d7af4:
   friendly_name: esp16 (ESP01 boiler test)
+switch.drucker:
+  icon: mdi:printer-3d
+switch.plant_michbaeck_2_water:
+  icon: mdi:water-pump
+media_player.stereopaar:
+  icon: mdi:speaker

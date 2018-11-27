@@ -157,6 +157,9 @@ title: Home
 
 # Include external resources
 resources:
+  - url: /local/custom-lovelace/not-my-own-card.js
+    type: js
+
   - url: /local/custom-lovelace/graph-card/graph-card.js?v=2
     type: js
     # https://community.home-assistant.io/t/lovelace-custom-history-graph/71450
@@ -386,12 +389,16 @@ views:
                 items:
                   - entity: input_select.michbaeck
                     name: Ort
-                  - entity: input_select.daily_routine
-                    name: Routine
                   - entity: proximity.home
                     name: Distanz
                   - entity: sensor.dir_of_travel
                     name: Richtung
+                  - entity: input_select.daily_routine
+                    name: Routine
+                  - entity: script.wakeup
+                    name: Aufstehen
+                  - entity: script.bedtime_actions
+                    name: Schlafen gehen
               - entity: sensor.johannes
 
           - id: newdash_scenes
@@ -399,10 +406,6 @@ views:
             type: entities
             show_header_toggle: false
             entities:
-              - entity: script.wakeup
-                name: Aufstehen
-              - entity: script.bedtime_actions
-                name: Schlafen gehen
               - entity: input_boolean.alexa_toggle
                 name: Alexa
 
@@ -536,6 +539,9 @@ views:
                     name: Fenster
                   - entity: switch.climate_kueche
                     name: Radiator
+                  - entity: variable.climate_kueche_save
+                    name: Gespeicherte Temperatur
+                    icon: mdi:temperature-celsius
               - type: custom:fold-entity-row    # bad
                 head:  climate.bad
                 name: Bad
@@ -546,6 +552,9 @@ views:
                     name: Fenster
                   - entity: switch.climate_bad
                     name: Radiator
+                  - entity: variable.climate_bad_save
+                    name: Gespeicherte Temperatur
+                    icon: mdi:temperature-celsius
               - type: custom:fold-entity-row    # michbaeck
                 head:  climate.michbaeck
                 name: michbaeck
@@ -560,6 +569,9 @@ views:
                     name: Fenster 2
                   - entity: switch.climate_michbaeck
                     name: Radiator
+                  - entity: variable.climate_michbaeck_save
+                    name: Gespeicherte Temperatur
+                    icon: mdi:temperature-celsius
               - type: custom:fold-entity-row    # michbaeck AC
                 head:  climate.michbaeck_ac
                 name: michbaeck AC
@@ -1578,18 +1590,23 @@ views:
       - input_boolean.view_details
       - input_boolean.view_debug
     cards:
+      - id: dev_not_my_own_1
+        type: custom:not-my-own-card
+        entity: sensor.plant_michbaeck_1
+        title: Not My Own Card
+
       #[x] CONDITIONAL
-      - id: dev_11
-        type: conditional
-        conditions:
-          - entity: input_boolean.view_details
-            state: 'on'
-            #.state_not
-        card:
-          type: entities
-          title: CONDITIONAL
-          entities:
-            - entity: sensor.config_version
+      # - id: dev_11
+        # type: conditional
+        # conditions:
+        #   - entity: input_boolean.view_details
+        #     state: 'on'
+        #     #.state_not
+        # card:
+          # type: entities
+          # title: CONDITIONAL
+          # entities:
+          #   - entity: sensor.config_version
 
 
       #[x] CALENDAR-CARD
@@ -1602,27 +1619,27 @@ views:
           - calendar.arbeit
           - calendar.privat
 
-      # CIRCLE-SENSOR-CARD
-      - id: dev_5
-        type: custom:circle-sensor-card
-        title: CIRCLE-SENSOR-CARD
-        entity: sensor.temp_michbaeck
-        name: Temp michbaeck
-        show_card: false
-        #.attribute: 'ambient'    # use attribute instead of state
-        #.attribute_max: 'feels_like'   # use attribute as max
-        units: '°C'
-        max: 40
-        min: 0
-        show_max: true
-        fill: 'var(--card-background-color)'
-        stroke_width: 10    # circle size
-        # stroke_color: 'var(--toggle-button-color)'
-        color_stops:
-          0: 'var(--paper-blue-400)'
-          15: 'var(--paper-green-400)'
-          20: 'var(--paper-orange-400)'
-          40: 'var(--google-red-500)'
+      #! CIRCLE-SENSOR-CARD # can't change size, gradient not working
+      # - id: dev_5
+        # type: custom:circle-sensor-card
+        # title: CIRCLE-SENSOR-CARD
+        # entity: sensor.temp_michbaeck
+        # name: Temp michbaeck
+        # show_card: false
+        # #.attribute: 'ambient'    # use attribute instead of state
+        # #.attribute_max: 'feels_like'   # use attribute as max
+        # units: '°C'
+        # max: 40
+        # min: 0
+        # show_max: true
+        # fill: 'var(--card-background-color)'
+        # stroke_width: 10    # circle size
+        # # stroke_color: 'var(--toggle-button-color)'
+        # color_stops:
+        #   0: 'var(--paper-blue-400)'
+        #   15: 'var(--paper-green-400)'
+        #   20: 'var(--paper-orange-400)'
+        #   40: 'var(--google-red-500)'
         #! gradient: true
         #! font_style:
         #!   color: red
@@ -1637,71 +1654,71 @@ views:
 
       #[x] FOLD-ENTITY-ROW # SLIDER-ENTIITY-ROW    
       #[todo] try to get attributes; fold-in-fold
-      - id: dev_6
-        title: FOLD-ENTITY-ROW
-        type: entities
-        show_header_toggle: false
-        entities:
-          - type: custom:fold-entity-row
-            head:  light.michbaeck_auto
-            name: michbaeck AutoDimmer
-            items: 
-              - type: custom:slider-entity-row
-                entity: light.michbaeck_auto
-                name: Dimmer anpassen
-              - entity: sensor.light_michbaeck_1_target
-                name: Lux SOLL
-              - entity: sensor.light_michbaeck_1_pct
-                name: Lux IST
-              - entity: sensor.brightness_michbaeck_dimmer
-                name: Helligkeit Lampen
-              - entity: sensor.light_michbaeck_auto
-                name: Dimmer Status
-            group_config:
-              secondary_info: entity-id
-            open: false
-          - type: custom:fold-entity-row
-            head: light.michbaeck_all
-            name: michbaeck
-            open: false
-            items:
-              - type: custom:slider-entity-row
-                entity: light.michbaeck_all
-                name: ALLE
-              - entity: light.grosses_licht
-              - type: custom:slider-entity-row
-                entity: light.stehlampe
-              - type: custom:slider-entity-row
-                entity: light.schreibtisch
-              - type: custom:slider-entity-row
-                entity: light.regal
-              - type: custom:slider-entity-row
-                entity: light.ikea
-              - type: custom:slider-entity-row
-                entity: light.bett
-              - type: custom:slider-entity-row
-                entity: light.xiaomi_gateway
+      # - id: dev_6
+        # title: FOLD-ENTITY-ROW
+        # type: entities
+        # show_header_toggle: false
+        # entities:
+          # - type: custom:fold-entity-row
+            # head:  light.michbaeck_auto
+            # name: michbaeck AutoDimmer
+            # items: 
+            #   - type: custom:slider-entity-row
+            #     entity: light.michbaeck_auto
+            #     name: Dimmer anpassen
+            #   - entity: sensor.light_michbaeck_1_target
+            #     name: Lux SOLL
+            #   - entity: sensor.light_michbaeck_1_pct
+            #     name: Lux IST
+            #   - entity: sensor.brightness_michbaeck_dimmer
+            #     name: Helligkeit Lampen
+            #   - entity: sensor.light_michbaeck_auto
+            #     name: Dimmer Status
+            # group_config:
+            #   secondary_info: entity-id
+            # open: false
+          # - type: custom':fold-entity-row
+            # head: light.michbaeck_all
+            # name: michbaeck
+            # open: false
+            # items:
+            #   - type: custom:slider-entity-row
+            #     entity: light.michbaeck_all
+            #     name: ALLE
+            #   - entity: light.grosses_licht
+            #   - type: custom:slider-entity-row
+            #     entity: light.stehlampe
+            #   - type: custom:slider-entity-row
+            #     entity: light.schreibtisch
+            #   - type: custom:slider-entity-row
+            #     entity: light.regal
+            #   - type: custom:slider-entity-row
+            #     entity: light.ikea
+            #   - type: custom:slider-entity-row
+            #     entity: light.bett
+            #   - type: custom:slider-entity-row
+            #     entity: light.xiaomi_gateway
 
       #[x] history-graph
-      - id: dev_7
-        type: history-graph
-        title: history-graph
-        hours_to_show: 6
-        refresh_interval: 60
-        entities:
-          - entity: sensor.temp_michbaeck
-            name: michbaeck
-          - entity: sensor.temp_kueche
-            name: Küche
-          - entity: sensor.temp_aussen
-            name: Aussen
+      # - id: dev_7
+        # type: history-graph
+        # title: history-graph
+        # hours_to_show: 6
+        # refresh_interval: 60
+        # entities:
+        #   - entity: sensor.temp_michbaeck
+        #     name: michbaeck
+        #   - entity: sensor.temp_kueche
+        #     name: Küche
+        #   - entity: sensor.temp_aussen
+        #     name: Aussen
 
       # POPUP-CARD
-      - id: dev_8
-        type: entities
-        title: POPUP-CARD
-        entities:
-          - entity: sensor.config_version
+      # - id: dev_8
+        # type: entities
+        # title: POPUP-CARD
+        # entities:
+        #   - entity: sensor.config_version
 
       #! GRAPH-CARD
       # - id: dev_9
@@ -1803,40 +1820,40 @@ views:
                 line_color: "var(--mbsecondary)"
 
       #[x] SENSOR card
-      - id: dev_2
-        type: sensor
-        title: SENSOR CARD
-        entity: sensor.temp_michbaeck
-        name: michbaeck
-        icon: mdi:thermometer
-        graph: line   # line or none
-        unit: °C
-        height: 100
-        line_width: 4
-        line_color: "var(--toggle-button-color)"
-        hours_to_show: 1
-        accuracy: 12
+      # - id: dev_2
+        # type: sensor
+        # title: SENSOR CARD
+        # entity: sensor.temp_michbaeck
+        # name: michbaeck
+        # icon: mdi:thermometer
+        # graph: line   # line or none
+        # unit: °C
+        # height: 100
+        # line_width: 4
+        # line_color: "var(--toggle-button-color)"
+        # hours_to_show: 1
+        # accuracy: 12
 
       #[x] MINI-GRAPH card
-      - id: dev_3
-        title: MINI-GRAPH-CARD
-        type: custom:mini-graph-card
-        entity: sensor.temp_michbaeck
-        name: " "
-        icon: mdi:thermometer
-        graph: line   # line or none
-        unit: °C
-        height: 100
-        line_width: 4
-        line_color: "var(--toggle-button-color)"
-        hours_to_show: 1
-        accuracy: 12
-        more_info: true
-        font_size: 1    # percent
-        line_value_above: 21
-        line_color_above: "var(--google-red-500)"
-        line_value_below: 19
-        line_color_below: "var(--dark-primary-color)"
-        hide_icon: false
+      # - id: dev_3
+        # title: MINI-GRAPH-CARD
+        # type: custom:mini-graph-card
+        # entity: sensor.temp_michbaeck
+        # name: " "
+        # icon: mdi:thermometer
+        # graph: line   # line or none
+        # unit: °C
+        # height: 100
+        # line_width: 4
+        # line_color: "var(--toggle-button-color)"
+        # hours_to_show: 1
+        # accuracy: 12
+        # more_info: true
+        # font_size: 1    # percent
+        # line_value_above: 21
+        # line_color_above: "var(--google-red-500)"
+        # line_value_below: 19
+        # line_color_below: "var(--dark-primary-color)"
+        # hide_icon: false
 
 

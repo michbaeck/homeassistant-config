@@ -27,13 +27,16 @@
   #---------------------------------------------#
   #= TASKS
 
+    #[todo]   adjust/autodimmer flux for winter
+    #[todo]   identify roommate's devices to check presence
     #[todo]   replace alexa shell_scripts with custom component
-    #[test]   add option to autodimmer to not change color
+    #[x]      add option to autodimmer to not change color
     #[todo]   add notifications (eg climate off because window open; water empty)
+    #[todo]   alexa event queue ('while you've been away I did...')
     #[test]   make automations not turning off climates but 'standby' (to differ user-off and system-off)
-    #[todo]   custom-card with folding + attributes + conditionals (entity, last-changed, etc.)
+    #[dev]    custom-card with folding + attributes + conditionals (entity, last-changed, etc.)
     #[todo]   check auto color michbaeck
-    #[todo]   work time-tracking
+    #[todo]   work-time tracking
     #[bug]    lux michbaeck 2 is floating
     #[bug]    check this log on startup: 
       # Error rendering data template: 
@@ -314,7 +317,6 @@
             brightness: 253
             rgb_color: [255,139,0]
             transition: 10
-
 
 #-----------------------------------------------------------------------------#
 #* SYSTEM + STATUS
@@ -2339,7 +2341,7 @@
 #* AUTOMATION
 
     variable:
-      # example variable:
+      #| example variable:
         #|   name:
         #|   value|value_template: '{{ variable.state + 1 }}'
         #|   attributes:
@@ -2347,7 +2349,7 @@
         #|     etc:
         #|   attributes_template:
         #|   restore: true
-      # example service
+      #| example service
         #| service: variable.set_variable
         #| data:
         #|   variable: myvar
@@ -2367,14 +2369,20 @@
       #. climate_home_away:
       #.   restore: true
       climate_bad_save:
+        attributes:
+          unit_of_measurement: '°C'
         restore: true
-        value: 20
+        #> value: 20
       climate_michbaeck_save:
+        attributes:
+          unit_of_measurement: '°C'
         restore: true
-        value: 20
+        #> value: 20
       climate_kueche_save:
+        attributes:
+          unit_of_measurement: '°C'
         restore: true
-        value: 20
+        #> value: 20
 
       sun_elevation_min:
         restore: true
@@ -2591,8 +2599,8 @@
             {{ 
               is_state("input_boolean.debug_log", "on") and
               service|regex_search(include) and not
-              string|regex_search(exclude) and not
-              string|regex_search("notify\.homeassistant_debug")
+              service|regex_search(exclude) and not
+              service|regex_search("notify\.homeassistant_debug")
             }}
         action:
           - service: notify.homeassistant_debug
@@ -2747,18 +2755,6 @@
           - platform: state
             entity_id: sensor.bed_load
         action:
-          #> - service: input_number.set_value   # calculate degree of motion
-            #> data_template:
-            #>   entity_id: input_number.bed_load_step
-            #>   value: >-
-            #>     {{ 
-            #>       (
-            #>         (
-            #>           trigger.to_state.state|default(0)|float - 
-            #>           trigger.from_state.state|default(0)|float
-            #>         )*1000
-            #>       )|int 
-            #>     }}
           - service: variable.set_variable    # calculate movement and save 'step'
             data_template:
               variable: sleep_cycle
@@ -2775,36 +2771,6 @@
                   "{\"step\":" + step|int|string +"}"
                 }}
 
-          #> - condition: template     # check if motion exceeds threshold
-            # value_template: >-
-            #   {{
-            #     states("input_number.bed_load_step")|default(0)|int > states("input_number.bed_load_sensitivity")|default(100)|int
-            #     or states("input_number.bed_load_step")|default(0)|int < states("input_number.bed_load_sensitivity")|default(100)|int*-1
-            #   }}    
-          #> - condition: template     # check if motion exceeds threshold
-            # value_template: >-
-            #   {{
-            #     state_attr("variable.sleep_cycle","step")|default(0)|int > states("input_number.bed_load_sensitivity")|default(100)|int
-            #     or state_attr("variable.sleep_cycle","step")|default(0)|int < states("input_number.bed_load_sensitivity")|default(100)|int*-1
-            #   }}    
-          #> - service: input_number.set_value
-            # data_template:
-            #   entity_id: input_number.sleep_cycle
-            #   value: >-
-            #     {% set step = states("input_number.bed_load_step")|default(0)|int %}
-            #     {% if step < 0 %}
-            #       {% set x = step*-1 %}
-            #     {% else %}
-            #       {% set x = step %}
-            #     {% endif %}
-            #     {{
-            #       [
-            #         [
-            #           (states("input_number.sleep_cycle")|default(0)|float + x|float/1000),
-            #           100
-            #         ]|min,0
-            #       ]|max|float|round(1) 
-            #     }}
           - service: variable.set_variable    # calculate count, ratio and filters
             data_template:
               variable: sleep_cycle
@@ -2835,7 +2801,7 @@
                 {% endif %}
 
                 {# apply lowpass filter to counter #}
-                {% set B = 1/5 %}
+                {% set B = 1/20 %}
                 {% set A = 1-B %}
 
                 {% set lastlowpass = state_attr("variable.sleep_cycle", "lowpasscount")|default(lastcount)|float %}
@@ -2877,142 +2843,6 @@
               replace_attributes: false
               value: >-
                 {{ state_attr("variable.sleep_cycle", "lowpassratio") }}
-
-      #> - id: 'sleep_cycle_lowpass'   # on any sleep_cycle change, apply lowpass filter
-        # alias: 'sleep_cycle_lowpass'
-        # trigger:
-        #   - platform: state
-        #     entity_id: variable.sleep_cycle
-        # action:
-        #   - service: variable.set_variable
-        #     data_template:
-        #       variable: sleep_cycle
-        #       replace_attributes: false
-        #       attributes_template: >-
-        #         {% set B = 1/5 %}
-        #         {% set A = 1-B %}
-        #         {% set lastcount = state_attr("variable.sleep_cycle", "lowpasscount") %}
-                
-        #         {# calculate lowpass for counter #}
-        #         {% set count =
-        #           (
-        #             A|float * trigger.from_state.attributes.lowpasscount|float + 
-        #             B|float * trigger.to_state.attributes.lowpasscount|float
-        #           )|float|round(1) 
-        #         %}
-
-        #         {{ count }}
-
-      #> - id: 'sleep_cycle_ratio_lowpass'   # on any sleep_cycle change, apply lowpass filter
-        # alias: 'sleep_cycle_ratio_lowpass'
-        # trigger:
-        #   - platform: state
-        #     entity_id: sensor.sleep_cycle_ratio
-        # action:
-        #   - service: variable.set_variable
-        #     data_template:
-        #       variable: sleep_cycle
-        #       replace_attributes: false
-        #       value: >-
-        #         {% set B = 1/5 %}
-        #         {% set A = 1-B %}
-
-        #         {# calculate lowpass for ratio #}
-        #         {% set oldratio = state_attr("variable.sleep_cycle", "lowpassratio") %}
-                
-        #         {% set newratio =
-        #           (
-        #             A|float * oldratio|float + 
-        #             B|float * trigger.to_state.state|float
-        #           )|float|round(1) 
-        #         %}
-                
-        #         {# update ratio only every 5sec to not decrease too fast #}
-        #         {% if (now().timestamp() - states.variable.sleep_cycle.last_changed.timestamp())|int >= 5 %}
-        #           {% set ratio = newratio %}
-        #         {% else %}
-        #           {% set ratio = oldratio %}
-        #         {% endif %}
-
-        #         {{ ratio }}
-        #       attributes_template: >-
-        #         {% set B = 1/5 %}
-        #         {% set A = 1-B %}
-
-        #         {# calculate lowpass for ratio #}
-        #         {% set oldratio = state_attr("variable.sleep_cycle", "lowpassratio") %}
-                
-        #         {% set newratio =
-        #           (
-        #             A|float * oldratio|float + 
-        #             B|float * trigger.to_state.state|float
-        #           )|float|round(1) 
-        #         %}
-                
-        #         {# update ratio only every 5sec to not decrease too fast #}
-        #         {% if (now().timestamp() - states.variable.sleep_cycle.last_changed.timestamp())|int >= 5 %}
-        #           {% set ratio = newratio %}
-        #         {% else %}
-        #           {% set ratio = oldratio %}
-        #         {% endif %}
-
-        #         {{
-        #           "{
-        #             \"lowpassratio\":" + ratio|int|string + "
-        #           }"
-        #         }}
-
-      #> - id: 'sleep_cycle_count_decrease'   # if movement below threshold, decrease 'count'
-        # alias: 'sleep_cycle_count_decrease'
-        # initial_state: true
-        # trigger:
-        #   # - platform: state 
-        #   #   entity_id: input_number.bed_load_step
-        #   - platform: state
-        #     entity_id: sensor.bed_load
-        # condition:
-        #     # - condition: template
-        #       # value_template: >-
-        #       #   {{
-        #       #     states("input_number.bed_load_step")|default(0)|int < states("input_number.bed_load_sensitivity")|default(100)|int
-        #       #     or states("input_number.bed_load_step")|default(0)|int > states("input_number.bed_load_sensitivity")|default(100)|int*-1
-        #       #   }}   
-        #   condition: template
-        #   value_template: >-
-        #     {{
-        #       state_attr("variable.sleep_cycle","step")|default(0)|int < states("input_number.bed_load_sensitivity")|default(100)|int
-        #       or state_attr("variable.sleep_cycle","step")|default(0)|int > states("input_number.bed_load_sensitivity")|default(100)|int*-1
-        #     }}  
-        # action:
-        #   # - service: input_number.set_value
-        #     # data_template:
-        #     #   entity_id: input_number.sleep_cycle
-        #     #   value: >-
-        #     #     {{
-        #     #       [
-        #     #         [
-        #     #           (states("input_number.sleep_cycle")|default(0)|float*0.995), 
-        #     #           (states("input_number.sleep_cycle")|default(0)|float-0.01)
-        #     #         ]|min, 0
-        #     #       ]|max 
-        #     #     }}
-        #   - service: variable.set_variable
-        #     data_template:
-        #       variable: sleep_cycle
-        #       replace_attributes: false
-        #       attributes_template: >-
-        #         {% set count =
-        #           [
-        #             [
-        #               (state_attr("variable.sleep_cycle","count")|default(0)|float*0.995), 
-        #               (state_attr("variable.sleep_cycle","count")|default(0)|float-0.01)
-        #             ]|min, 0
-        #           ]|max 
-        #         %}
-
-        #         {{
-        #           "{\"count\":" + count|float|string +"}"
-        #         }}
 
   #--------------------------------------------------------------------------#
   #= MORNING ROUTINE
@@ -3629,6 +3459,10 @@
             entity_id:
               - climate.michbaeck
               - input_number.climate_michbaeck_tempdiff
+        condition:
+          condition: template
+          value_template: >-
+            {{ state_attr("climate.michbaeck", "temperature")|float > 20 }}
         action:
           - service: climate.set_temperature
             data_template:
@@ -4233,6 +4067,32 @@
             data:
               entity_id: light.ikea
               brightness: 255
+
+      - id: 'auto_color_michbaeck_1'    # controls light color (flux replacement)
+        alias: 'auto_color_michbaeck_1'
+        initial_state: false
+        trigger:
+          # - platform: time
+            # minutes: '/15'
+            # seconds: 00
+          - platform: state
+            entity_id: 
+              - input_number.flux_adjust
+              - sensor.flux
+        condition:
+          condition: and
+          conditions:
+            - condition: state
+              entity_id: light.michbaeck_dimmer
+              state: 'on'
+            - condition: state
+              entity_id: script.auto_color_michbaeck_1
+              state: 'off'
+            - condition: template
+              value_template: >-
+                {{ is_state("sensor.auto_dimmer_michbaeck_1", "idle") }}
+        action:
+          - service: script.auto_color_michbaeck_1
 
       - id: 'auto_color_kueche'   # controls light color (flux replacement)
         alias: 'auto_color_kueche'
@@ -5987,6 +5847,16 @@
 
       climate_michbaeck_on_off:   #[todo] split on-off  # () turn heater on/off depending on conditions sensor
         sequence:
+          - service_template: >-
+                {% if is_state("binary_sensor.climate_michbaeck_helper", "on") %}
+                  automation.turn_on
+                {% else %}
+                  automation.turn_off
+                {% endif %}
+            data:
+              entity_id:
+                - automation.climate_michbaeck_ac_temp
+                - automation.climate_michbaeck_fan_speed
           #. - service: notify.homeassistant_debug
             #. data_template:
             #.   message: >-
@@ -6031,16 +5901,6 @@
             #     {% else %}
             #       off
             #     {% endif %}
-          - service_template: >-
-                {% if is_state("binary_sensor.climate_michbaeck_helper", "on") %}
-                  automation.turn_off
-                {% else %}
-                  automation.turn_on
-                {% endif %}
-            data:
-              entity_id:
-                - automation.climate_michbaeck_ac
-                - automation.climate_michbaeck_fan_speed
           - condition: template   # condition disables alexa
             value_template: >-
               {{ false }}
@@ -6537,13 +6397,13 @@
                 - light.grosses_licht
                 - light.stehlampe
               transition: 10
-              color_temp: '{{ [states("sensor.flux")|int * 1.1, 500]|min|int }}'
+              color_temp: '{{ [states("sensor.flux")|int, 500]|min|int }}'
           - service: light.turn_on
             data_template:
               entity_id: 
                 - light.schreibtisch
               transition: 10
-              color_temp: '{{ [[states("sensor.flux")|int * 1.1, 500]|min, 250]|max|int }}'
+              color_temp: '{{ [[states("sensor.flux")|int, 500]|min, 250]|max|int }}'
 
   #---------------------------------------------------------------------------#
   #= PLANT
