@@ -25,7 +25,8 @@ themes:
     mbfindme: "#66ff00"
    #------------------------------------------------------------------------#
    # predefined vars
-    accent-color: "var(--mbsecondary)"
+    #. accent-color: "var(--mbsecondary)"
+    accent-color: "var(--mbpridark)"
     card-background-color: "var(--mbbg2)"
     dark-primary-color: "var(--mbsecdark)"
     # dark-disabled-opacity: 0.38
@@ -34,10 +35,10 @@ themes:
     # dark-secondary-opacity: 0.54
     disabled-text-color: "var(--mbtextoff)"
     divider-color: "rgba(0, 0, 0, .12)"
-    google-blue-500: "var(--mbsecdark)"  #4285f4
-    google-green-500: "var(--mbgreen)"    #0f9d58
-    google-red-500: "var(--mbanalogdark)"  #db4437
-    google-yellow-500: "var(--mbanalog2dark)" #f4b400
+    google-blue-500: "var(--mbsecdark)"
+    google-green-500: "var(--mbgreen)"
+    google-red-500: "var(--mbanalogdark)"
+    google-yellow-500: "var(--mbanalog2dark)"
     label-badge-background-color: "var(--mbbg2)"
     label-badge-blue: "var(--mbsecondary)"
     label-badge-green: "var(--mbgreen)"
@@ -50,7 +51,7 @@ themes:
     # light-divider-opacity: 0.12
     # light-primary-opacity: 1.0
     # light-secondary-opacity: 0.7
-    paper-blue-400: "var(--mbsecondary)"  #42a5f5
+    paper-blue-400: "var(--mbsecondary)"
     paper-card-header-color: "var(--mbwhite)"
     # paper-card-background-color: "var(--card-background-color)"
     # paper-item-icon-active-color: "var(--state-icon-active-color)"
@@ -60,11 +61,11 @@ themes:
     # paper-slider-secondary-color: "var(--slider-secondary-color)"
     # paper-toggle-button-checked-button-color: "var(--toggle-button-color)"
     # paper-toggle-button-checked-ink-color: "var(--toggle-button-color)"
-    paper-green-400: "var(--mbgreen)" #66bb6a
+    paper-green-400: "var(--mbgreen)"
     paper-grey-50: "var(--mbseclight)"
     paper-grey-200: "var(--mbbg2)"
-    paper-grey-500: "var(--mbtext)"   #9e9e9e
-    paper-orange-400: "var(--mbprimary)"  #ffa726
+    paper-grey-500: "var(--mbtext)"
+    paper-orange-400: "var(--mbprimary)"
     paper-slider-active-color: "var(--paper-slider-knob-color)"
     paper-slider-knob-color: "var(--mbprimary)"
     paper-slider-knob-start-color: "var(--mbbrown)"
@@ -73,10 +74,10 @@ themes:
     paper-toggle-button-unchecked-bar-color: "var(--paper-toggle-button-checked-bar-color)"
     paper-toggle-button-unchecked-button-color: "var(--mbbrown)"
     primary-background-color: "var(--mbbg1)"
-    primary-color: "var(--mbseclight)"    # banner
-    primary-text-color: "var(--mbtext)"   # regular text
+    primary-color: "var(--mbseclight)"
+    primary-text-color: "var(--mbtext)"
     secondary-background-color: "var(--mbbg1)"
-    secondary-text-color: "var(--mbtextsec)"    # seconds information
+    secondary-text-color: "var(--mbtextsec)"
     sidebar-background-color: "var(--mbbg1)"
     sidebar-icon-color: "var(--mbtextoff)"
     sidebar-selected-icon-color: "var(--mbwhite)"

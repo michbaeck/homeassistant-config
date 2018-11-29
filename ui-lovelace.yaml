@@ -55,7 +55,7 @@ title: Home
         #| lux 2
         #[x] brightness
         #[x] status
-      #[x] light.michbaeck_all
+      #[x] light.michbaeck
         #[x] dimmer
         #[x] grosses_licht
         #[x] stehlampe
@@ -157,7 +157,7 @@ title: Home
 
 # Include external resources
 resources:
-  - url: /local/custom-lovelace/not-my-own-card.js
+  - url: /local/custom-lovelace/not-my-own-card.js?v=0.0.2
     type: js
 
   - url: /local/custom-lovelace/graph-card/graph-card.js?v=2
@@ -375,7 +375,7 @@ views:
             show_state: true
             entity: sensor.ticker
             image: /local/pics/darkgrey.png
-            aspect_ratio: 8x1
+            aspect_ratio: 5x1
             
           - id: newdash_presence
             type: entities
@@ -480,16 +480,18 @@ views:
                     name: Helligkeit Lampen
                   - entity: sensor.light_michbaeck_auto
                     name: Dimmer Status
+                  - entity: sensor.light_michbaeck_auto_state
+                    name: Letzte Aktion
                 #. group_config:
                 #.   secondary_info: entity-id
                 open: false
               - type: custom:fold-entity-row    # michbaeck lights
-                head: light.michbaeck_all
+                head: light.michbaeck
                 name: Lampen michbaeck
                 open: false
                 items:
                   - type: custom:slider-entity-row
-                    entity: light.michbaeck_all
+                    entity: light.michbaeck
                     name: ALLE
                   - type: custom:slider-entity-row
                     entity: light.grosses_licht
@@ -600,8 +602,15 @@ views:
       #   cards:
 
       - id: newdash_spotify
-        type: media-control
+        # type: media-control
+        type: custom:mini-media-player
         entity: media_player.spotify
+        show_source: true
+        show_progress: true
+        show_shuffle: true
+        hide_power: true
+        scroll_info: true
+        artwork: cover
 
       - id: newdash_plants
         title: Pflanzen
@@ -888,6 +897,7 @@ views:
               entity: input_boolean.view_details
               state: 'on'
           - id: light_michbaeck_1_2
+            title: MyEntities Title
             type: entities
             entities:
               - entity: light.grosses_licht
@@ -992,137 +1002,6 @@ views:
       #     - entity: sensor.config_version
 
 #-----------------------------------------------------------------------------#
-#* CLIMATE
-  # - id: climate
-    # title: Klima
-    # icon: mdi:thermometer
-    # badges:
-    #   - input_boolean.view_options
-    #   - input_boolean.view_details
-    #   - input_boolean.view_debug
-    # cards:
-    #   - id: climate_1
-    #     type: vertical-stack
-    #     cards:
-    #      # michbaeck
-    #       - type: thermostat
-    #         entity: climate.michbaeck
-    #       - type: glance
-    #         show_state: false
-    #         entities:
-    #           - entity: binary_sensor.door_michbaeck
-    #             name: Tür
-    #             icon: mdi:door
-    #           - entity: binary_sensor.window_michbaeck_1
-    #             name: Fenster 1
-    #           - entity: binary_sensor.window_michbaeck_2
-    #             name: Fenster 2
-    #       - type: custom:mini-graph-card
-    #         entity: sensor.temp_michbaeck
-    #         unit: °C
-    #         height: 100
-    #         line_width: 4
-    #         line_color: var(--toggle-button-color)
-    #         hours_to_show: 6
-    #         accuracy: 24
-    #         more_info: true
-    #         font_size: 50    # percent
-    #         line_value_above: 21
-    #         line_color_above: var(--google-red-500)
-    #         line_value_below: 19
-    #         line_color_below: var(--dark-primary-color)
-    #         hide_icon: false
-
-    #   # kueche
-    #   - id: climate_2
-    #     type: vertical-stack
-    #     cards:
-    #       - type: thermostat
-    #         entity: climate.kueche
-    #       - type: horizontal-stack
-    #         cards:
-    #           - type: glance
-    #             show_state: false
-    #             entities:
-    #               - entity: binary_sensor.window_kueche
-    #                 name: Fenster
-    #       - type: custom:mini-graph-card
-    #         entity: sensor.temp_kueche
-    #         unit: °C
-    #         height: 100
-    #         line_width: 4
-    #         line_color: var(--toggle-button-color)
-    #         hours_to_show: 6
-    #         accuracy: 24
-    #         more_info: true
-    #         font_size: 50    # percent
-    #         line_value_above: 21
-    #         line_color_above: var(--google-red-500)
-    #         line_value_below: 19
-    #         line_color_below: var(--dark-primary-color)
-    #         hide_icon: false
-
-    #   # bad
-    #   - id: climate_3
-    #     type: vertical-stack
-    #     cards:
-    #       - type: thermostat
-    #         entity: climate.bad
-    #       - type: horizontal-stack
-    #         cards:
-    #           - type: glance
-    #             show_state: false
-    #             entities:
-    #               - entity: binary_sensor.window_bad
-    #                 name: Fenster
-    #       - type: custom:mini-graph-card
-    #         entity: sensor.temp_bad
-    #         unit: °C
-    #         height: 100
-    #         line_width: 4
-    #         line_color: var(--toggle-button-color)
-    #         hours_to_show: 6
-    #         accuracy: 24
-    #         more_info: true
-    #         font_size: 50    # percent
-    #         line_value_above: 21
-    #         line_color_above: var(--google-red-500)
-    #         line_value_below: 19
-    #         line_color_below: var(--dark-primary-color)
-    #         hide_icon: false
-
-
-    #   - id: climate_entities
-    #     type: custom:monster-card
-    #     card:
-    #       type: entities
-    #       title: All climate
-    #     filter:
-    #       include:
-    #         - domain: climate
-    #           options:
-    #             secondary_info: entity-id
-    #     when:
-    #       entity: input_boolean.view_debug
-    #       state: 'on'
-
-      # - id: climate_4
-        # type: entities
-        # title: placeholder
-        # entities:
-        #   - entity: sensor.config_version
-      # - id: climate_5
-        # type: entities
-        # title: placeholder
-        # entities:
-        #   - entity: sensor.config_version
-      # - id: climate_6
-        # type: entities
-        # title: placeholder
-        # entities:
-        #   - entity: sensor.config_version
-
-#-----------------------------------------------------------------------------#
 #* SLEEP
   - id: sleep
     title: Sleep Cycle
@@ -1142,13 +1021,18 @@ views:
             entities:
               - entity: input_datetime.alarm
               - entity: input_datetime.leave_home
+              - entity: input_number.bed_load_sensitivity
+              - entity: input_boolean.asleep
+              - type: divider
               - entity: calendar.arbeit
               - entity: binary_sensor.workday_sensor
-              - entity: input_boolean.asleep
+              - type: divider
               - entity: sensor.bed_load
               - entity: sensor.bed_load_step
+              - type: divider
               - entity: sensor.sleep_cycle
               - entity: sensor.sleep_cycle_lowpass
+              - type: divider
               - entity: sensor.sleep_cycle_ratio
               - entity: sensor.sleep_cycle_ratio_lowpass
           - type: gauge
@@ -1294,6 +1178,19 @@ views:
       - id: system_4
         type: vertical-stack
         cards:
+          - type: sensor
+            entity: sensor.vpn_disconnects
+            graph: none
+          - type: entities
+            title: ESP disconnects
+            entities:
+              - sensor.esp01_disconnects
+              - sensor.esp02_disconnects
+              - sensor.esp04_disconnects
+              - sensor.esp05_disconnects
+              - sensor.esp07_disconnects
+              - sensor.esp10_disconnects
+              - sensor.esp11_disconnects
           - type: markdown
             #.title: Debugging
             content: >
@@ -1303,12 +1200,17 @@ views:
               e.g. [ **script\\.|light\\.** ] will log all services starting with either "script." or "light.".
               Apply patterns **carefully** and enable debug_log below.
           - type: entities
-            title: Regex String
+            title: Regex Strings
             show_header_toggle: false
             entities:
-              - entity: input_text.debug_regex
-              - entity: input_text.debug_regex_exclude
-              - entity: input_boolean.debug_log
+              - entity: input_text.debug_states_include
+              - entity: input_text.debug_states_exclude
+              - entity: input_boolean.debug_states
+              - entity: input_boolean.debug_attributes
+              - type: divider
+              - entity: input_text.debug_services_include
+              - entity: input_text.debug_services_exclude
+              - entity: input_boolean.debug_services
 
       - id: system_2
         type: custom:monster-card
@@ -1323,89 +1225,124 @@ views:
         title: ESP nodes
         entities:
           - entity: sensor.esp01
-          - type: weblink
-            url: http://esp01
-            name: esp01 - Pflanze 1 & RF
-          # - type: custom:entity-attributes-card
-            # filter:
-            #   include:
-            #     - key: sensor.esp01.uptime
-            #     - key: sensor.esp01.ip
-            #     - key: sensor.esp01.rssi
-            #     - key: sensor.esp01.plugin
-            #     - key: sensor.esp01.last*
+          - type: custom:fold-entity-row
+            head:  
+              type: section
+              label: Details
+            items: 
+              - type: weblink
+                url: http://esp01
+                name: esp01 - Pflanze 1 & RF
+              # - type: custom:entity-attributes-card
+              #   filter:
+              #     include:
+              #       - key: sensor.esp01.uptime
+              #       - key: sensor.esp01.ip
+              #       - key: sensor.esp01.rssi
+              #       - key: sensor.esp01.plugin
+              #       - key: sensor.esp01.last*
           - entity: sensor.esp02
-          - type: weblink
-            url: http://esp02
-            name: esp02 - Aussen
-          # - type: custom:entity-attributes-card
-            # filter:
-            #   include:
-            #     - key: sensor.esp02.uptime
-            #     - key: sensor.esp02.ip
-            #     - key: sensor.esp02.rssi
-            #     - key: sensor.esp02.plugin
-            #     - key: sensor.esp02.last*
+          - type: custom:fold-entity-row
+            head:  
+              type: section
+              label: Details
+            items: 
+              - type: weblink
+                url: http://esp02
+                name: esp02 - Aussen
+              # - type: custom:entity-attributes-card
+              #   filter:
+              #     include:
+              #       - key: sensor.esp02.uptime
+              #       - key: sensor.esp02.ip
+              #       - key: sensor.esp02.rssi
+              #       - key: sensor.esp02.plugin
+              #       - key: sensor.esp02.last*
           - entity: sensor.esp04
-          - type: weblink
-            url: http://esp04
-            name: esp04 - michbaeck Thermostat
-          # - type: custom:entity-attributes-card
-            # filter:
-            #   include:
-            #     - key: sensor.esp04.uptime
-            #     - key: sensor.esp04.ip
-            #     - key: sensor.esp04.rssi
-            #     - key: sensor.esp04.plugin
-            #     - key: sensor.esp04.last*
+          - type: custom:fold-entity-row
+            head:  
+              type: section
+              label: Details
+            items: 
+              - type: weblink
+                url: http://esp04
+                name: esp04 - michbaeck Thermostat
+              # - type: custom:entity-attributes-card
+              #   filter:
+              #     include:
+              #       - key: sensor.esp04.uptime
+              #       - key: sensor.esp04.ip
+              #       - key: sensor.esp04.rssi
+              #       - key: sensor.esp04.plugin
+              #       - key: sensor.esp04.last*
           - entity: sensor.esp05
-          - type: weblink
-            url: http://esp05
-            name: esp05 - Bad Sensoren
-          # - type: custom:entity-attributes-card
-            # filter:
-            #   include:
-            #     - key: sensor.esp05.uptime
-            #     - key: sensor.esp05.ip
-            #     - key: sensor.esp05.rssi
-            #     - key: sensor.esp05.plugin
-            #     - key: sensor.esp05.last*
+          - type: custom:fold-entity-row
+            head:  
+              type: section
+              label: Details
+            items: 
+              - type: weblink
+                url: http://esp05
+                name: esp05 - Bad Sensoren
+              # - type: custom:entity-attributes-card
+              #   filter:
+              #     include:
+              #       - key: sensor.esp05.uptime
+              #       - key: sensor.esp05.ip
+              #       - key: sensor.esp05.rssi
+              #       - key: sensor.esp05.plugin
+              #       - key: sensor.esp05.last*
           - entity: sensor.esp07
-          - type: weblink
-            url: http://esp07
-            name: esp07 - Ventilator
-          # - type: custom:entity-attributes-card
-            # filter:
-            #   include:
-            #     - key: sensor.esp07.uptime
-            #     - key: sensor.esp07.ip
-            #     - key: sensor.esp07.rssi
-            #     - key: sensor.esp07.plugin
-            #     - key: sensor.esp07.last*
+          - type: custom:fold-entity-row
+            head:  
+              type: section
+              label: Details
+            items: 
+              - type: weblink
+                url: http://esp07
+                name: esp07 - Ventilator
+              # - type: custom:entity-attributes-card
+              #   filter:
+              #     include:
+              #       - key: sensor.esp07.uptime
+              #       - key: sensor.esp07.ip
+              #       - key: sensor.esp07.rssi
+              #       - key: sensor.esp07.plugin
+              #       - key: sensor.esp07.last*
           - entity: sensor.esp10
-          - type: weblink
-            url: http://esp10
-            name: esp10 - michbaeck Fenster 2
-          # - type: custom:entity-attributes-card
-            # filter:
-            #   include:
-            #     - key: sensor.esp10.uptime
-            #     - key: sensor.esp10.ip
-            #     - key: sensor.esp10.rssi
-            #     - key: sensor.esp10.plugin
-            #     - key: sensor.esp10.last*
+          - type: custom:fold-entity-row
+            head:  
+              type: section
+              label: Details
+            items: 
+              - type: weblink
+                url: http://esp10
+                name: esp10 - michbaeck Fenster 2
+              # - type: custom:entity-attributes-card
+              #   filter:
+              #     include:
+              #       - key: sensor.esp10.uptime
+              #       - key: sensor.esp10.ip
+              #       - key: sensor.esp10.rssi
+              #       - key: sensor.esp10.plugin
+              #       - key: sensor.esp10.last*
           - entity: sensor.esp11
-          - type: weblink
-            url: http://esp11
-            name: esp11 - Bett
-          # - type: custom:entity-attributes-card
-            # filter:
-            #   include:
-            #     - key: sensor.esp11.uptime
-            #     - key: sensor.esp11.ip
-            #     - key: sensor.esp11.rssi
-            #     - key: sensor.esp11.plugin
-            #     - key: sensor.esp11.last*
+          - type: custom:fold-entity-row
+            head:  
+              type: section
+              label: Details
+            items: 
+              - type: weblink
+                url: http://esp11
+                name: esp11 - Bett
+              # - type: custom:entity-attributes-card
+              #   filter:
+              #     include:
+              #       - key: sensor.esp11.uptime
+              #       - key: sensor.esp11.ip
+              #       - key: sensor.esp11.rssi
+              #       - key: sensor.esp11.plugin
+              #       - key: sensor.esp11.last*
           - type: weblink
             url: http://esp50
             name: sonofftouch01 - Bad Licht
@@ -1592,7 +1529,7 @@ views:
     cards:
       - id: dev_not_my_own_1
         type: custom:not-my-own-card
-        entity: sensor.plant_michbaeck_1
+        entity: sensor.bed_load_step
         title: Not My Own Card
 
       #[x] CONDITIONAL
@@ -1678,12 +1615,12 @@ views:
             #   secondary_info: entity-id
             # open: false
           # - type: custom':fold-entity-row
-            # head: light.michbaeck_all
+            # head: light.michbaeck
             # name: michbaeck
             # open: false
             # items:
             #   - type: custom:slider-entity-row
-            #     entity: light.michbaeck_all
+            #     entity: light.michbaeck
             #     name: ALLE
             #   - entity: light.grosses_licht
             #   - type: custom:slider-entity-row

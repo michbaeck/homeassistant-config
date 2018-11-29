@@ -47,7 +47,7 @@ class SpotifyPlaylistCard extends HTMLElement {
               border: 0;
               padding: 1px 1px;
               color: rgb(120, 120, 120);
-              background-color: white;
+              background-color: var(--card-background-color);
               font-weight: bold;
               text-align: center;
               font-size: 14px;
@@ -82,14 +82,14 @@ class SpotifyPlaylistCard extends HTMLElement {
               display: grid;
               gap: 1px 1px;
               grid-gap: 1px 1px;
-              background-color: white;
+              background-color: var(--card-background-color);
               grid-template-columns:`;
       var cssColumns = ' auto'.repeat(config.columns);
       style.textContent += cssColumns;
       style.textContent += `;}
 
       .grid-item {
-        background-color: white;
+        background-color: var(--card-background-color);
         border: 0;
         padding: 1px;
         font-size: 14px;
@@ -156,7 +156,7 @@ class SpotifyPlaylistCard extends HTMLElement {
       }
     }
     getCardSize() {
-      return 1;
+      return 6;
     }
 }
   

@@ -68,20 +68,20 @@ class MonsterCard extends HTMLElement {
     return Array.from(entities.values());
   }
 
-  setConfig(config) {
+  setConfig(config) {   // read user config
     if (!config.filter.include || !Array.isArray(config.filter.include)) {
       throw new Error('Please define filters');
     }
 
     if (this.lastChild) this.removeChild(this.lastChild);
 
-    const cardConfig = Object.assign({}, config);
-    if (!cardConfig.card) cardConfig.card = {};
-    if (config.card.entities) delete config.card.entities;
-    if (!cardConfig.card.type) cardConfig.card.type = 'entities';
+    const cardConfig = Object.assign({}, config);   // attach user config to cardconfig
+    if (!cardConfig.card) cardConfig.card = {};   // if no card defined, create
+    if (config.card.entities) delete config.card.entities;    // ??
+    if (!cardConfig.card.type) cardConfig.card.type = 'entities';   // if type empty give default
 
-    const element = document.createElement(`hui-${cardConfig.card.type}-card`);
-    this.appendChild(element);
+    const element = document.createElement(`hui-${cardConfig.card.type}-card`);   // create card
+    this.appendChild(element);    // attach card to this html
 
     this._config = cardConfig;
   }
@@ -89,6 +89,7 @@ class MonsterCard extends HTMLElement {
   set hass(hass) {
     const config = this._config;
     let entities = this._getEntities(hass, config.filter.include);
+    
     if (config.filter.exclude) {
       const excludeEntities = this._getEntities(hass, config.filter.exclude).map(entity => entity.entity);
       entities = entities.filter(entity => !excludeEntities.includes(entity.entity));

@@ -113,7 +113,6 @@ input_select.michbaeck:
   friendly_name: Standort
   icon: mdi:map-marker-radius
 sensor.michbaeck:
-  friendly_name: Standort
   icon: mdi:map-marker-radius
 sensor.dir_of_travel:
   friendly_name: Richtung
@@ -164,3 +163,6 @@ switch.plant_michbaeck_2_water:
   icon: mdi:water-pump
 media_player.stereopaar:
   icon: mdi:speaker
+sensor.vpn_disconnects:
+  friendly_name: VPN today
+  unit_of_measurement: disconnects
