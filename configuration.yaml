@@ -27,6 +27,7 @@
   #---------------------------------------------#
   #= TASKS
 
+    #[todo]   make value-only-card/row
     #[test]   track home internet, seems unstable
     #[test]   adjust/autodimmer flux for winter
     #[todo]   identify roommate's devices to check presence
@@ -43,11 +44,12 @@
     #[todo]   check auto color michbaeck
     #[todo]   work-time tracking
     #[dev]    get sleep cycle right
+    #[bug]    motion floor automation
     #[bug]    lux michbaeck 2 is floating
     #[bug]    check this log on startup: 
       # Error rendering data template: 
       # UndefinedError: 'dict object' has no attribute 'entity_id'
-
+ 
     #---------------------------------------------#
     #= Hardware
 
@@ -809,7 +811,7 @@
           friendly_name: Lux Aussen (%)
           device_class: illuminance
           value_template: >-
-            {% if states("variable.light_aussen")|default(3400)|float > 0 %}
+            {% if not is_state("variable.light_aussen", 0) %}
               {{ ((states("sensor.light_aussen") | float * 100 / states("variable.light_baseline_aussen")|default(15) | float)) | round(1) }}
             {% else %}
               0
@@ -1841,12 +1843,33 @@
 
     #| device_tracker.brain by iOS app
 
-    sensor johannes:    #[todo] need to track Hannes presence
+    geofency:
+
+    binary_sensor johannes_notebook:
+      platform: ping  
+      host: 192.168.100.28
+      name: johannes_notebook
+      scan_interval: 60
+      count: 5
+      device_class: connectivity
+
+    binary_sensor johannes_handy:
+      platform: ping  
+      host: 192.168.100.26
+      name: johannes_handy
+      scan_interval: 60
+      count: 5
+      device_class: connectivity
+
+    binary_sensor johannes:    #[todo] need to track Hannes presence
       platform: template
       sensors:
         johannes: 
           value_template: >-
-            {{ "home" }}
+            {{ 
+              is_state("binary_sensor.johannes_handy","on") or 
+              is_state("binary_sensor.johannes_notebook","on") 
+            }}
 
     device_tracker nmap:
       platform: nmap_tracker
@@ -1858,10 +1881,10 @@
       interval_seconds: 60
       track_new_devices: yes
 
-    device_tracker geofeny:
-      platform: geofency
-      #. consider_home: 60
-      track_new_devices: yes
+    #. device_tracker geofeny:    # replaced with geofency component
+      #. platform: geofency
+      #> consider_home: 60
+      #. track_new_devices: yes
 
     #| input_select.michbaeck
     #|  |_ sensor.michbaeck
@@ -1914,7 +1937,7 @@
         presence:
           value_template: >-
             {{
-              is_state("sensor.johannes", "home") or
+              is_state("binary_sensor.johannes", "on") or
               is_state("sensor.michbaeck", "home") or
               is_state("sensor.daily_routine", "travel_home")
             }}
@@ -2121,7 +2144,7 @@
 
       alexa_toggle:   # enable/disable alexa voice (user input)
 
-      alexa_toggle2:    #[todo] replace with var # enable/disable alexa voice (script input)
+      #> alexa_toggle2:    #[todo] replace with var # enable/disable alexa voice (script input)
   
       view_details:
         name: Details anzeigen
@@ -2406,10 +2429,12 @@
         icon: mdi:amazon-alexa
         options:
           - Stereopaar
-          - Schlafzimmer
-          - Flur
-          - Küche
+          - Schlafzimmer 1
+          - Schlafzimmer 2
           - Überall
+          - Küche
+          - Flur
+          - Spare
 
       alexa_content:
         name: Select Content
@@ -3071,6 +3096,10 @@
                   (to_load - from_load)*1000
                 %}
 
+                {% if step < -50000 or step > 50000 %}
+                  {% set step = 0 %}
+                {% endif %}
+
                 {{
                   "{\"step\":" + step|int|string +"}"
                 }}
@@ -3395,7 +3424,7 @@
           - service: script.alexa_play    # start radio
             data_template:
               device: 'Überall'
-              content: 'WDR5'
+              # content: 'WDR5'
 
       - id: 'leave_home_reminder'   # voice reminder every 10 min when to leave
         alias: 'leave_home_reminder'
@@ -3606,12 +3635,12 @@
                 - input_boolean.michbaeck_arrival
           - service: script.alexa_volume    # set radio volume
             data:
-              device: 'Schlafzimmer'
-              volume: '40'
+              device: Stereopaar
+              volume: '35'
           - service: script.alexa_play    # play radio
             data:
-              device: 'Schlafzimmer'
-              content: 'wdr5'
+              device: Stereopaar
+              # content: 'wdr5'
           - service: notify.iospush   # send push (iospush = iphone+ipad)
             data_template:
               message: 'Computer/Radio/Licht eingeschaltet. Alarm deaktiviert.'
@@ -3628,7 +3657,7 @@
           - service: script.alexa_says    # alexa tts text
             data_template:
               # device: Schlafzimmer
-              entity: script.michbaeck_arrival_home
+              # entity: script.michbaeck_arrival_home
               text: >-
                 {{-
                   [
@@ -4007,7 +4036,7 @@
       - id: motion_bad_on   # lights on when motion detected
         alias: 'motion_bad_on'
         #. initial_state: true
-        trigger:    # when motion detected
+        trigger:
           - platform: state
             entity_id: binary_sensor.motion_bad
             to: 'on'
@@ -4015,14 +4044,14 @@
           condition: and
           conditions:
             - condition: state
-              entity_id: input_boolean.motion_bad_toggle
+              entity_id: input_boolean.motion_bad
               state: 'on'
             #. - condition: state
             #.   entity_id: light.bad
             #.   state: 'off'
             - condition: template
               value_template: >-
-                {{ states("sensor.light_bad")|default(0)|float < states("input_number.motion_bad_sensitivity")|default(0)|float }}
+                {{ states("sensor.light_bad")|default(0)|float < states("input_number.trigger")|default(0)|float }}
         action:
           - service: notify.homeassistant_debug
             data_template:
@@ -4031,7 +4060,7 @@
           - condition: template   # condition for automation.homeassistant_shutdown
             value_template: >-
               {{ states("sensor.light_bad")|default(0)|float < states("input_number.motion_bad_trigger")|default(10)|float }}
-          - service: light.turn_on    # turn floor+kitchen lights on, brightness 255
+          - service: light.turn_on  
             data_template:
               entity_id: light.bad
 
@@ -4041,12 +4070,17 @@
           - platform: state
             entity_id: binary_sensor.motion_bad_helper
         condition:
-          condition: template
-          value_template: >-
-            {{ 
-              is_state("light.bad", "on") 
-              and not is_state("sensor.esp05", "unavailable") 
-            }}
+          condition: and
+          conditions:
+            - condition: state
+              entity_id: input_boolean.motion_bad
+              state: 'on'
+            - condition: template
+              value_template: >-
+                {{ 
+                  is_state("light.bad", "on") 
+                  and not is_state("sensor.esp05", "unavailable") 
+                }}
         action:
           - condition: state
             entity_id: binary_sensor.motion_bad_helper
@@ -4487,9 +4521,9 @@
       - id: 'plant_1_issue'   # notify when plant gets too dry
         alias: 'plant_1_issue'
         trigger:
-          platform: numeric_state
+          platform: state
           entity_id: sensor.plant_michbaeck_1
-          below: 30
+          # below: 30
         condition:
           condition: template
           value_template: >-
@@ -4499,18 +4533,31 @@
               trigger.to_state.state|default(0)|string != "unavailable" 
             }}
         action:
+          - service: persistent_notification.dismiss
+            data_template:
+              notification_id: plant_1_issue
+          - condition: numeric_state
+            entity_id: sensor.plant_michbaeck_1
+            below: 30
           - service: notify.homeassistant_debug
             data_template:
               message: >-
                 {{ now()|string + " - automation.plant_1_issue triggered by " + trigger.entity_id + " changing its state FROM: " + trigger.from_state.state|string + " TO: " + trigger.to_state.state|string }}
           - service: script.plant_1_notify
+          - service: persistent_notification.create
+            data_template:
+              notification_id: plant_1_issue
+              title: >-
+                {{ state_attr(trigger.entity_id, "friendly_name") }}
+              message: >-
+                {{ "Wert für " + state_attr(trigger.entity_id, "friendly_name") + " beträgt " + trigger.to_state.state_with_unit|string + " und sollte gegossen werden." }}
 
       - id: 'plant_2_issue'   # notify when plant gets too dry
         alias: 'plant_2_issue'
         trigger:
-          platform: numeric_state
+          platform: state
           entity_id: sensor.plant_michbaeck_2
-          below: 30
+          # below: 30
         condition:
           condition: template
           value_template: >-
@@ -4520,11 +4567,89 @@
               trigger.to_state.state|default(0)|string != "unavailable" 
             }}
         action:
+          - service: persistent_notification.dismiss
+            data_template:
+              notification_id: plant_2_issue
+          - condition: numeric_state
+            entity_id: sensor.plant_michbaeck_2
+            below: 30
           - service: notify.homeassistant_debug
             data_template:
               message: >-
                 {{ now()|string + " - automation.plant_2_issue triggered by " + trigger.entity_id + " changing its state FROM: " + trigger.from_state.state|string + " TO: " + trigger.to_state.state|string }}
           - service: script.plant_2_notify
+          - service: persistent_notification.create
+            data_template:
+              notification_id: plant_2_issue
+              title: >-
+                {{ state_attr(trigger.entity_id, "friendly_name") }}
+              message: >-
+                {{ "Wert für " + state_attr(trigger.entity_id, "friendly_name") + " beträgt " + trigger.to_state.state_with_unit|string + " und sollte gegossen werden." }}
+
+      - id: plant_1_water    # water flower if < 30, update state >> should retrigger if more water needed
+        alias: plant_1_water
+        initial_state: false
+        trigger:
+          platform: state
+          entity_id: 
+            - sensor.plant_michbaeck_1
+            - binary_sensor.plant_michbaeck_1_water
+        condition:
+          condition: and
+          conditions:
+            - condition: state
+              entity_id: binary_sensor.plant_michbaeck_1_water
+              state: 'on'
+            - condition: state
+              entity_id: input_boolean.asleep
+              state: 'off'
+            - condition: numeric_state
+              entity_id: sensor.plant_michbaeck_1
+              below: 30
+        action:
+          - service: persistent_notification.dismiss
+            data:
+              notification_id: plant_1_water
+          - service: notify.homeassistant_debug
+            data_template:
+              message: >-
+                {{ now()|string + " - automation.plant_1_watering triggered by " + trigger.entity_id + " changing its state FROM: " + trigger.from_state.state|string + " TO: " + trigger.to_state.state|string }}
+          - service: persistent_notification.create
+            data_template:
+              notification_id: plant_1_water
+              title: >-
+                {{ state_attr(trigger.entity_id, "friendly_name") }}
+              message: >-
+                {{ state_attr(trigger.entity_id, "friendly_name") + " wird gegossen." }}
+          - service: switch.turn_on
+            data:
+              entity_id: switch.plant_michbaeck_1_water
+          - delay:
+              seconds: 10
+          - service: switch.turn_off
+            data:
+              entity_id: switch.plant_michbaeck_1_water
+          - service: mqtt.publish
+            data_template:
+              topic: esp10/cmd
+              payload: event,plantrequest
+          - wait_template: >-
+              {{ states("sensor.plant_michbaeck_1")|int > trigger.to_state.state|int }}
+            timeout: '00:00:30'
+          - service: notify.homeassistant_debug
+            data_template:
+              message: >-
+                {{ now()|string + " - automation.plant_1_watering - " + trigger.entity_id + " watered, new state: " + states(trigger.entity_id)|string }}
+          - service: persistent_notification.dismiss
+            data:
+              notification_id: plant_1_water
+          - service: persistent_notification.create
+            data_template:
+              notification_id: plant_1_water
+              title: >-
+                {{ state_attr(trigger.entity_id, "friendly_name") }}
+              message: >-
+                {{ state_attr(trigger.entity_id, "friendly_name") + " gegossen. Wert beträgt nun " + states(trigger.entity_id)|string }}
 
       - id: plant_2_water    # water flower if < 30, update state >> should retrigger if more water needed
         alias: plant_2_water
@@ -4546,10 +4671,20 @@
               entity_id: sensor.plant_michbaeck_2
               below: 30
         action:
+          - service: persistent_notification.dismiss
+            data:
+              notification_id: plant_2_water
           - service: notify.homeassistant_debug
             data_template:
               message: >-
                 {{ now()|string + " - automation.plant_2_watering triggered by " + trigger.entity_id + " changing its state FROM: " + trigger.from_state.state|string + " TO: " + trigger.to_state.state|string }}
+          - service: persistent_notification.create
+            data_template:
+              notification_id: plant_2_water
+              title: >-
+                {{ state_attr(trigger.entity_id, "friendly_name") }}
+              message: >-
+                {{ state_attr(trigger.entity_id, "friendly_name") + " wird gegossen." }}
           - service: switch.turn_on
             data:
               entity_id: switch.plant_michbaeck_2_water
@@ -4568,7 +4703,17 @@
           - service: notify.homeassistant_debug
             data_template:
               message: >-
-                {{ now()|string + " - automation.plant_2_watering - " + trigger.entity_id + " watered, new state: " + states("sensor.plant_michbaeck_2")|string }}
+                {{ now()|string + " - automation.plant_2_watering - " + trigger.entity_id + " watered, new state: " + states(trigger.entity_id)|string }}
+          - service: persistent_notification.dismiss
+            data:
+              notification_id: plant_2_water
+          - service: persistent_notification.create
+            data_template:
+              notification_id: plant_2_water
+              title: >-
+                {{ state_attr(trigger.entity_id, "friendly_name") }}
+              message: >-
+                {{ state_attr(trigger.entity_id, "friendly_name") + " gegossen. Wert beträgt nun " + states(trigger.entity_id)|string }}
 
       - id: plant_water_empty   # notify on empty water tank
         alias: plant_water_empty
@@ -4576,7 +4721,7 @@
           - platform: state
             entity_id:
               #. - binary_sensor.plant_wohnzimmer_1_water
-              #. - binary_sensor.plant_michbaeck_1_water
+              - binary_sensor.plant_michbaeck_1_water
               - binary_sensor.plant_michbaeck_2_water
             to: 'off'
         condition:
@@ -4604,7 +4749,7 @@
           - service: script.alexa_says
             data_template:
               # device: Schlafzimmer
-              entity_id: automation.plant_water_empty
+              # entity_id: automation.plant_water_empty
               text: >-
                 {{ state_attr(trigger.entity_id, "friendly_name") + " ist leer und muss aufgefüllt werden." }}
           - service: persistent_notification.create
@@ -4718,7 +4863,7 @@
               {{ is_state("script.alexa_says", "off") }}
           - service: script.alexa_says                                                # voice
             data_template:
-              entity: automation.startup_checks
+              # entity: automation.startup_checks
               # device: Schlafzimmer
               text: >-
                 {%- if trigger.to_state.state == "unavailable" -%}
@@ -4821,7 +4966,7 @@
           - service: script.alexa_says    # alexa tts text
             data_template:
               # device: Schlafzimmer
-              entity: script.dwd_warning_current
+              # entity: script.dwd_warning_current
               text: >-
                   {{ "Es gibt eine Stufe " + states("sensor.dwd_current_warning_level")|string + " Warnung vom DWD, Sie lautet " + state_attr("sensor.dwd_current_warning_level", "warning_1_headline") }}.
 
@@ -4857,8 +5002,8 @@
               {{ is_state("script.alexa_says", "off") }}
           - service: script.alexa_says    # alexa tts text
             data_template:
-              device: Schlafzimmer
-              entity: script.dwd_warning_advance
+              # device: Schlafzimmer
+              # entity: script.dwd_warning_advance
               text: >-
                   {{ "Es gibt eine Stufe " + states("sensor.dwd_advance_warning_level")|string + " Warnung vom DWD, Sie lautet " + state_attr("sensor.dwd_advance_warning_level", "warning_1_headline") }}.
 
@@ -5058,7 +5203,7 @@
           - platform: state
             entity_id:
               - sensor.michbaeck
-              # - sensor.johannes
+              - binary_sensor.johannes
         action:
           - service: input_text.set_value                                                    
             data_template:
@@ -5267,8 +5412,7 @@
           - service: homeassistant.turn_on
             data:
               entity_id:
-                - input_boolean.alexa_toogle
-                - input_boolean.alexa_toogle2
+                - input_boolean.alexa_toggle
                 - input_boolean.climate_automatic
                 - input_boolean.motion_flur
                 - input_boolean.motion_kueche
@@ -5569,9 +5713,9 @@
                 {% endif %}
           - service: script.alexa_says    # alexa tts text
             data_template:
-              device: Schlafzimmer 1
-              delay: 'yes'
-              entity: automation.wecker_helper
+              # device: Schlafzimmer 1
+              # delay: 'yes'
+              # entity: automation.wecker_helper
               text: >-
                 {%- if is_state("binary_sensor.alarm_helper", "on") -%}
                   Wecker wurde aktiviert.
@@ -5648,26 +5792,26 @@
                   set max brightness. 
                   turn on radio. 
                   update routine, EVENT = alarm
-          - service: script.turn_off                                                  # turn off light fading (in case triggered by motion)
+          - service: script.turn_off    # turn off light fading (in case triggered by motion)
             data:
               entity_id: script.wecker_fadein
-          - service: script.daily_routine                                             # change condition to enable other automations
+          - service: script.daily_routine   # change condition to enable other automations
             data:
               event: alarm
-          - service: light.turn_on                                                    # full brightness (in case triggered by motion)
+          - service: light.turn_on    # full brightness (in case triggered by motion)
             data_template:
               entity_id: light.michbaeck_hue
               kelvin: 3000
               brightness: 255
               transition: 1
-          - service: script.alexa_volume                                          # set radio default volume
+          - service: script.alexa_volume    # set radio default volume
             data_template:
               device: Stereopaar
               volume: 25
-          - service: script.alexa_play                                            # start radio
+          - service: script.alexa_play    # start radio
             data_template:
               device: Stereopaar
-              content: 'WDR5'
+              # content: 'WDR5'
 
       wecker_snooze:    # ()
         sequence:
@@ -5718,8 +5862,8 @@
                   calling script.alexa_says
           - service: script.alexa_says
             data_template:
-              entity: script.wecker_voice
-              device: Schlafzimmer 1
+              # entity: script.wecker_voice
+              # device: Schlafzimmer 1
               text: >-
                 {{ text + " "}}
                 {%- if is_state("sensor.daily_routine", "alarm") -%}
@@ -5743,7 +5887,7 @@
                   Tür michbaeck is open. Calling script.alexa_says_2 in addition.
           - service: script.alexa_says_2
             data_template:
-              entity: script.wecker_voice
+              # entity: script.wecker_voice
               device: Küche
               text: >-
                 {{ text }}
@@ -5807,8 +5951,8 @@
               {{ is_state("script.alexa_says", "off") }}
           - service: script.alexa_says    # alexa say 'guten morgen'
             data_template:
-              entity: script.wakeup
-              device: Schlafzimmer 1
+              # entity: script.wakeup
+              # device: Schlafzimmer 1
               text: >-
                 {%- set weather = state_attr("weather.yahoo", "forecast")[0].condition|string -%}
                 {%- if weather == "cloudy" -%}
@@ -5881,13 +6025,13 @@
               {{ false }}
           - service: script.alexa_volume
             data:
-              device: Schlafzimmer
+              device: Stereopaar
               volume: 25
           - wait_template: >-
               {{ is_state("script.alexa_says", "off") }}
           - service: script.alexa_says    # alexa tts text
             data_template:
-              entity: automation.bedtime
+              # entity: automation.bedtime
               # device: Schlafzimmer
               text: >-
                 {{
@@ -5915,7 +6059,7 @@
               {{ is_state("script.alexa_says", "off") }}
           - service: script.alexa_says    # say good night and tomorrow's weather
             data_template:
-              entity: automation.bedtime
+              # entity: automation.bedtime
               # device: Schlafzimmer
               text: >-
                 {#- "if night, then today's forecast; else tomorrow's" -#}
@@ -6234,8 +6378,8 @@
               {{ is_state("script.alexa_says", "off") }}
           - service: script.alexa_says
             data_template:
-              entity: automation.climate_michbaeck
-              device: Schlafzimmer
+              # entity: automation.climate_michbaeck
+              # device: Schlafzimmer
               text: >-
                 {% if is_state("binary_sensor.climate_michbaeck_helper", "on") -%}
                   {% set state = "ein." %}
@@ -6727,11 +6871,26 @@
             data_template:
               entity_id: 
                 - light.regal
-                - light.grosses_licht
+                - light.grosses_licht_1
                 - light.stehlampe
-                - light.schreibtisch
               transition: 10
-              color_temp: '{{ [states("sensor.flux")|int, 500]|min|int }}'
+              color_temp: >
+                {{ [states("sensor.flux")|int, 500]|min|int }}
+          - service: light.turn_on
+            data_template:
+              entity_id: 
+                - light.grosses_licht_2
+                - light.schreibtisch
+              transition: 8
+              color_temp: >
+                {{ [states("sensor.flux")|int + 50, 500]|min|int }}
+          - service: light.turn_on
+            data_template:
+              entity_id: 
+                - light.grosses_licht_3
+              transition: 6
+              color_temp: >
+                {{ [states("sensor.flux")|int + 100, 500]|min|int }}
 
   #---------------------------------------------------------------------------#
   #= PLANT
@@ -6771,10 +6930,10 @@
               }}
                 {# and not is_state("sensor.randomizer_0_100", 101) #}
             timeout: '00:01:10'
-          - service: script.alexa_says                                          # alexa tts text
+          - service: script.alexa_says    # alexa tts text
             data_template:
-              entity: script.plant_update
-              device: Schlafzimmer
+              # entity: script.plant_update
+              # device: Schlafzimmer
               text: >-
                 {%- if states("sensor.plant_michbaeck_1")|int > 20 and states("sensor.plant_michbaeck_2")|int > 20 -%}
                   Deinen Pflanzen geht es gut,
@@ -6795,10 +6954,10 @@
                   sound: 'door_chime.wav'
           - wait_template: >-
               {{ is_state("script.alexa_says", "off") }}
-          - service: script.alexa_says                                          # alexa tts text
+          - service: script.alexa_says    # alexa tts text
             data_template:
-              entity: automation.plant_1_issue
-              device: Schlafzimmer
+              # entity: automation.plant_1_issue
+              # device: Schlafzimmer
               text: >-
                 Die große Pflanze braucht Wasser, Feuchtigkeit beträgt nur noch {{ states("sensor.plant_michbaeck_1") }} Prozent.
           - service: script.ticker_generator
@@ -6818,10 +6977,10 @@
                   sound: 'door_chime.wav'
           - wait_template: >-
               {{ is_state("script.alexa_says", "off") }}
-          - service: script.alexa_says                                          # alexa tts text
+          - service: script.alexa_says    # alexa tts text
             data_template:
-              entity: automation.plant_2_issue
-              device: Schlafzimmer
+              # entity: automation.plant_2_issue
+              # device: Schlafzimmer
               text: >-
                 Die kleine Pflanze braucht Wasser, Feuchtigkeit beträgt nur noch {{ states("sensor.plant_michbaeck_2") }} Prozent.
           - service: script.ticker_generator
@@ -6903,25 +7062,25 @@
                   sound: 'door_chime.wav'
           - wait_template: >-
               {{ is_state("script.alexa_says", "off") }}
-          - service: script.alexa_says                                                # alexa tts text
+          - service: script.alexa_says    # alexa tts text
             data_template:
-              device: Schlafzimmer
-              entity_id: automation.badewasser
+              # device: Schlafzimmer
+              # entity_id: automation.badewasser
               text: Badewanne ist voll.
           - wait_template: >-
               {{ is_state("script.alexa_says_2", "off") }}
-          - service: script.alexa_says_2                                                # alexa tts text
+          - service: script.alexa_says_2    # alexa tts text
             data_template:
               device: Küche
-              entity_id: automation.badewasser
+              # entity_id: automation.badewasser
               text: Badewanne ist voll.
 
       loetkolben_off:   # ()
         sequence:
-          - service: script.alexa_says                                                # alexa tts text
+          - service: script.alexa_says    # alexa tts text
             data_template:
-              device: Schlafzimmer
-              entity_id: script.loetkolben_off
+              # device: Schlafzimmer
+              # entity_id: script.loetkolben_off
               text: Lötkolben ausgeschaltet.
           - service: script.ticker_generator
             data_template:

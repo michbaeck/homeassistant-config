@@ -113,7 +113,7 @@ class NotMyOwnCard extends HTMLElement {
 
       // define vars to display
       if (!this.lastChild) {
-        let cardconf = [];
+        // let cardconf = [];
         // cardconf.push({title: this.config.title});
 
         let cardentities = [];
@@ -126,6 +126,7 @@ class NotMyOwnCard extends HTMLElement {
     
         // write html to card
         const card = document.createElement('hui-entities-card');
+        card.setConfig({title: this.config.title});
         card.setConfig({entities: cardentities});
         // card.config.title = this.config.title;
         // card.hass = hass;

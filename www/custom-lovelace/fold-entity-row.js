@@ -17,7 +17,7 @@ class FoldRow extends Polymer.Element {
         max-height: 0;
       }
       .open > ul {
-        max-height: 40px;
+        max-height: 60px;
       }
       #head {
         display: flex;
@@ -75,51 +75,24 @@ class FoldRow extends Polymer.Element {
     let conf = [];
     let head = this._config.head;
     let items = this._config.items;
-
-    // makes string head to object and moves string to conf.head.entity
     if(typeof head === 'string') {
       head = {entity: head};
     }
-
-    // append head.entity to conf (conf[x].entity = 'domain.entity_name')
     conf.push(head);
-      // conf.entity[] == head
-
-    // read group attributes and copy list of entities to items
     if(head.entity && head.entity.startsWith('group')) {
       items = this._hass.states[head.entity].attributes.entity_id;
     }
-
-    // makes string item to object and moves string to conf.entity
     items.forEach((i) => {
-
-      // append items.entity to conf (conf[x].entity = 'domain.entity_name')
       if(typeof i === 'string') i = {entity: i};
-        // item[0].entity == item0
-        // item[1].entity == item1 
-        // etc.
-
-      // append group_config to conf (conf[x].secondary_info = 'last-changed')
       conf.push(Object.assign(i, this._config.group_config));
-        // item[0].secondary_info == last-changed
-        // item[1].secondary_info == last-changed 
-        // etc.
-
-        // conf[0].entity == head
-        // conf[1].entity == item0
-        // conf[1].secondary_info == last-changed
-        // conf[2].entity == item1
-        // conf[2].secondary_info == last-changed
-        // etc
     });
 
-    // clear array
     this.items = [];
 
-    this.dummy = document.createElement('hui-entities-card'); // card
-    this.dummy.setConfig({entities: conf});   // fill card
-    this.dummy.hass = this._hass;   // card.hass = current hass
-    this.appendChild(this.dummy);   // attach card to this polymer element
+    this.dummy = document.createElement('hui-entities-card');
+    this.dummy.setConfig({entities: conf});
+    this.dummy.hass = this._hass;
+    this.appendChild(this.dummy);
 
     const nextChild = (root) => {
       let child = root.firstChild;
@@ -147,9 +120,7 @@ class FoldRow extends Polymer.Element {
     if(row.tagName === 'DIV') {
       row = row.children[0];
     }
-
     this.items.push(row);
-    
     if(row.tagName === 'HUI-SECTION-ROW'){
       if(row.updateComplete) {
         row.updateComplete.then( () => {
@@ -168,7 +139,6 @@ class FoldRow extends Polymer.Element {
       }
     }
   }
-  
   _addRow(row, data)
   {
     if(row.tagName === 'DIV') {
@@ -207,7 +177,7 @@ class FoldRow extends Polymer.Element {
   if(this.dummy)
   this.dummy.hass = hass;
     if(this.items && this.items.forEach)
-      this.items.forEach( (c) => c.hass = hass); // what is 'c'?
+      this.items.forEach( (c) => c.hass = hass);
   }
 }
 
