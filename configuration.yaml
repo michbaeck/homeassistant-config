@@ -27,6 +27,7 @@
   #---------------------------------------------#
   #= TASKS
 
+    #[todo]   alexa/ticker queue scripts
     #[todo]   make value-only-card/row
     #[test]   track home internet, seems unstable
     #[test]   adjust/autodimmer flux for winter
@@ -37,13 +38,16 @@
     #[todo]   alexa event queue ('while you've been away, I did...')
     #[test]   make automations not turning off climates but 'standby' (to differ user-off and system-off)
     #[dev]    custom-card with 
-              #[todo] folding
-              #[todo] attributes, 2nd infos
+              #[x]    folding
+              #[test] templates
+              #[test] attributes, 2nd infos
               #[todo] conditions (entity, last-changed, etc.)
               #[todo] icon-color
     #[todo]   check auto color michbaeck
     #[todo]   work-time tracking
     #[dev]    get sleep cycle right
+    #[todo]   influxDB for history
+    #[bug]    massive recorder issues (use mySQL?)
     #[bug]    motion floor automation
     #[bug]    lux michbaeck 2 is floating
     #[bug]    check this log on startup: 
@@ -158,32 +162,36 @@
       #     - input_number.ticker_fx
       #     - input_number.cleanup_keep_days
 
-    #.history:
-      # include:
-      #   domains:
-      #     - climate
-      #   entities:
-      #     - binary_sensor.door_michbaeck
-      #     - binary_sensor.window_bad
-      #     - binary_sensor.window_kueche
-      #     - binary_sensor.window_michbaeck_1
-      #     - binary_sensor.window_michbaeck_2
-      #     - sensor.bed_load
-      #     - sensor.daily_routine
-      #     - sensor.dir_of_travel
-      #     - sensor.flux
-      #     - sensor.michbaeck
-      #     - sensor.plant_michbaeck_1
-      #     - sensor.plant_michbaeck_2
-      #     - sensor.sleep_cycle
-      #     - sensor.sleep_cycle_ratio
-      #     - sensor.sun_elevation
-      #     - sensor.temp_aussen
-      #     - sensor.temp_bad
-      #     - sensor.temp_flur
-      #     - sensor.temp_kueche
-      #     - sensor.temp_michbaeck
-      #     - sensor.weather
+    history:
+      include:
+        domains:
+          - climate
+          - variable
+        entities:
+          - binary_sensor.door_michbaeck
+          - binary_sensor.window_bad
+          - binary_sensor.window_kueche
+          - binary_sensor.window_michbaeck_1
+          - binary_sensor.window_michbaeck_2
+          - binary_sensor.climate_michbaeck_helper
+          - binary_sensor.climate_kueche_helper
+          - binary_sensor.climate_bad_helper
+          - sensor.bed_load
+          - sensor.daily_routine
+          - sensor.dir_of_travel
+          - sensor.flux
+          - sensor.michbaeck
+          - sensor.plant_michbaeck_1
+          - sensor.plant_michbaeck_2
+          - sensor.sleep_cycle
+          - sensor.sleep_cycle_ratio
+          - sensor.sun_elevation
+          - sensor.temp_aussen
+          - sensor.temp_bad
+          - sensor.temp_flur
+          - sensor.temp_kueche
+          - sensor.temp_michbaeck
+          - sensor.weather
 
     map:
 
@@ -774,12 +782,12 @@
       client_id: !secret spotify_playlist_id
       client_secret: !secret spotify_playlist_secret
 
-    media_player alexa:
-      platform: alexa
-      email: !secret amazon_user
-      password: !secret amazon_password
-      url: "amazon.de"
-      debug: true
+    # media_player alexa:
+      # platform: alexa
+      # email: !secret amazon_user
+      # password: !secret amazon_password
+      # url: "amazon.de"
+      # debug: true
 
     media_player spotify:
       platform: spotify
@@ -985,7 +993,7 @@
                 and 
                 is_state("binary_sensor.motion_bad", "off") 
                 and 
-                (now().timestamp() - states.binary_sensor.motion_flur.last_changed.timestamp())/60 > states("input_number.motion_bad_delay")|default(0)|int
+                (now().timestamp() - states.binary_sensor.motion_bad.last_changed.timestamp())/60 > states("input_number.motion_bad_delay")|default(0)|int
               ) 
             }}
 
@@ -1458,8 +1466,38 @@
       platform: template
       sensors:
         climate_home:
+          entity_id:
+              - input_datetime.climate_1_start
+              - input_datetime.climate_1_end
+              - input_datetime.climate_2_start
+              - input_datetime.climate_2_end
+              - input_datetime.climate_3_start
+              - input_datetime.climate_3_end
+              - input_datetime.climate_4_start
+              - input_datetime.climate_4_end
+              - input_datetime.climate_5_start
+              - input_datetime.climate_5_end
+              - input_datetime.climate_6_start
+              - input_datetime.climate_6_end
+              - input_datetime.climate_7_start
+              - input_datetime.climate_7_end
+              - sensor.time
           value_template: >-
+            {% set start = as_timestamp(strptime(states("input_datetime.climate_" + now().isoweekday()|string + "_start"),"%H:%M:%S")) %}
+            {% set end = as_timestamp(strptime(states("input_datetime.climate_" + now().isoweekday()|string + "_end"),"%H:%M:%S")) %}
+            {% set now = as_timestamp(strptime(states("sensor.time"),"%H:%M")) %}
+
+            {% if start is none or end is none %}
+              {% set time = true %}
+            {% elif now > start and now < end %}
+              {% set time = true %}
+            {% else %}
+              {% set time = false %}
+            {% endif %}
+
             {{
+              time
+              and
               is_state("binary_sensor.presence", 'on') 
               and
               (
@@ -2446,8 +2484,8 @@
         name: Spotify Source
         icon: mdi:spotify
         options:
-          - Schlafzimmer
           - Stereopaar
+          - Schlafzimmer
           - Küche
           - Überall
           - FireTV
@@ -2484,15 +2522,15 @@
       daily_routine:    # what am I doing?
         name: daily_routine
         options:
+          - freetime_home   # when reaching home or when awake on free days
+          - workday_morning   # when awake trigger
           - sleep   # when bedtime trigger
           - nightwalk   # if awake before alarm time
           - alarm_fadein    # at alarm time
           - alarm   # at alarm time
-          - workday_morning   # when awake trigger
           - travel_work   # when leaving house
           - work    # when reaching work
           - travel_home   # when leaving work
-          - freetime_home   # when reaching home or when awake on free days
           - freetime_away   # when leaving home after work or on free days
           - unknown
 
@@ -2544,6 +2582,61 @@
         has_date: false
         has_time: true
 
+      climate_1_start:
+        name: Montag Start
+        has_time: true
+
+      climate_1_end:
+        name: Montag Ende
+        has_time: true
+
+      climate_2_start:
+        name: Dienstag Start
+        has_time: true
+
+      climate_2_end:
+        name: Dienstag Ende
+        has_time: true
+
+      climate_3_start:
+        name: Mittwoch Start
+        has_time: true
+
+      climate_3_end:
+        name: Mittwoch Ende
+        has_time: true
+
+      climate_4_start:
+        name: Donnerstag Start
+        has_time: true
+
+      climate_4_end:
+        name: Donnerstag Ende
+        has_time: true
+        
+      climate_5_start:
+        name: Freitag Start
+        has_time: true
+
+      climate_5_end:
+        name: Freitag Ende
+        has_time: true
+
+      climate_6_start:
+        name: Samstag Start
+        has_time: true
+
+      climate_6_end:
+        name: Samstag Ende
+        has_time: true
+
+      climate_7_start:
+        name: Sonntag Start
+        has_time: true
+
+      climate_7_end:
+        name: Sonntag Ende
+        has_time: true
 #-----------------------------------------------------------------------------#
 #* AUTOMATION
 
@@ -2959,7 +3052,7 @@
   #---------------------------------------------------------------------------#
   #= SLEEP
 
-      - id: 'bedtime_trigger_auto'    # turns everything off when laying in bed for 1 minute
+      - id: bedtime_trigger_auto    # turns everything off when laying in bed for 1 minute
         alias: 'bedtime_trigger_auto'
         trigger:
           - platform: numeric_state
@@ -3001,7 +3094,7 @@
             above: 50
           - service: script.bedtime_actions
 
-      - id: 'bedtime_actions'   # turn lights, music, climate off if confirmed
+      - id: bedtime_actions   # turn lights, music, climate off if confirmed
         alias: 'bedtime_actions'
         initial_state: true
         trigger:    # if push received
@@ -3012,7 +3105,7 @@
         action:
           - service: script.bedtime_actions
 
-      - id: 'bed_load_calibration'
+      - id: bed_load_calibration
         alias: 'bed_load_calibration'
         initial_state: 'on'
         trigger:
@@ -3061,7 +3154,7 @@
                   - input_number.bed_load_raw_max = \""  + states("input_number.bed_load_raw_max")|default(0)|string + "\""
                 }}
 
-      - id: 'sleep_cycle_calculations'   # calculate bed motion diff
+      - id: sleep_cycle_calculations   # calculate bed motion diff
         alias: 'sleep_cycle_calculations'
         initial_state: true
         trigger:
@@ -3186,7 +3279,7 @@
   #--------------------------------------------------------------------------#
   #= MORNING ROUTINE
 
-      - id: 'wecker_helper'   # disable light alarm on weekend/holiday/vacation
+      - id: wecker_helper   # disable light alarm on weekend/holiday/vacation
         alias: 'wecker_helper'
         #. initial_state: true
         trigger:
@@ -3207,7 +3300,7 @@
                 {{ now()|string + " - automation.wecker_helper triggered - calling script.wecker_on_off" }}
           - service: script.wecker_on_off
 
-      - id: 'wecker_warning'    # displays message when alarm automatic off (input_boolean.wecker_toggle)
+      - id: wecker_warning    # displays message when alarm automatic off (input_boolean.wecker_toggle)
         alias: 'wecker_warning'
         #. initial_state: true
         trigger:
@@ -3245,7 +3338,7 @@
                   Wecker ist derzeit " + x
                 }}
 
-      - id: 'wecker_fadein'   # [debug on]trigger light alarm, if at home and start with increasing brightness
+      - id: wecker_fadein   # [debug on]trigger light alarm, if at home and start with increasing brightness
         alias: 'wecker_fadein'
         trigger:    # trigger when time = alarmtime from GUI reduced by fade in duration
           platform: template
@@ -3264,7 +3357,7 @@
                 {{ now()|string + " - automation.wecker_fadein triggered. calling script.wecker_fadein" }}            
           - service: script.wecker_fadein
 
-      - id: 'wecker_alarm'    # turn on radio when either alarm time reached or a peak of motion detected
+      - id: wecker_alarm    # turn on radio when either alarm time reached or a peak of motion detected
         alias: 'wecker_alarm'
         trigger:
           - platform: state
@@ -3288,7 +3381,7 @@
                 }}
           #. - service: script.wecker_alarm
 
-      - id: 'wecker_snooze'   # rings alarm every 10 min, can be snoozed
+      - id: wecker_snooze   # rings alarm every 10 min, can be snoozed
         alias: 'wecker_snooze'
         trigger:    # triggers every 10 minutes between alarm-time and leave-time
           - platform: template
@@ -3317,7 +3410,7 @@
                 }}
           - service: script.wecker_snooze
 
-      - id: 'wecker_snooze_action_1'    # snoozes alarm for 10 minutes
+      - id: wecker_snooze_action_1    # snoozes alarm for 10 minutes
         alias: 'wecker_snooze_action_1'
         initial_state: true
         trigger:    # if push received
@@ -3330,8 +3423,7 @@
             data_template:
               title: WECKER
               message: >-
-                {{ now()|string + " - " }}automation.wecker_snooze_action_1 triggered.
-                  received push snooze action 1. stopping alarm.
+                {{ now()|string + " - automation.wecker_snooze_action_1 triggered. received push snooze action 1. stopping alarm." }}
           - service: script.turn_off
             entity_id:
               - script.wecker_snooze
@@ -3339,7 +3431,7 @@
               - script.wecker_snooze_loop_2
           - service: script.alarm_xiaomi_stop
 
-      - id: 'wecker_snooze_action_2'    # stops alarm scripts, but only, if "riddle" solved
+      - id: wecker_snooze_action_2    # stops alarm scripts, but only, if "riddle" solved
         alias: 'wecker_snooze_action_2'
         initial_state: true
         trigger:    # if push received
@@ -3354,19 +3446,14 @@
               - script.wecker_snooze_loop_1
               - script.wecker_snooze_loop_2
           - service: script.alarm_xiaomi_stop
-          #. - service: logbook.log
-          #.   data_template:
-          #.     name: 'Wecker'
-          #.     entity_id: 'automation.wecker_snooze_action_2'
-          #.     message: >-
-          #.       Wecker stoppen gewählt. Erwarte Eingabe '{{ as_timestamp(now())|timestamp_custom("%A") }}'. '{{ trigger.event.data.textInput }}' erhalten.
           - condition: template
-            value_template: '{{ trigger.event.data.textInput|default("NA") == as_timestamp(now())|timestamp_custom("%A") }}'
+            value_template: >-
+              {{ trigger.event.data.textInput|default("NA") == as_timestamp(now())|timestamp_custom("%A") }}
           #. - service: script.turn_off
           #.   entity_id: script.wecker_alarm
           - service: script.wakeup
 
-      - id: 'set_awake'   # stops alarm once got out of bed
+      - id: set_awake   # stops alarm once got out of bed
         alias: 'set_awake'
         trigger:
           - platform: state
@@ -3395,7 +3482,7 @@
                 {{ now()|string + " - automation.set_awake triggered - calling script.wakeup." }}
           - service: script.wakeup
 
-      - id: 'morning_radio_move'    # moves radio from Schlafzimmer to Kueche when door opens
+      - id: morning_radio_move    # moves radio from Schlafzimmer to Kueche when door opens
         alias: 'morning_radio_move'
         trigger:
           - platform: state
@@ -3426,7 +3513,7 @@
               device: 'Überall'
               # content: 'WDR5'
 
-      - id: 'leave_home_reminder'   # voice reminder every 10 min when to leave
+      - id: leave_home_reminder   # voice reminder every 10 min when to leave
         alias: 'leave_home_reminder'
         trigger:
           - platform: template
@@ -3508,13 +3595,13 @@
                 {% set timenow = as_timestamp(strptime(states("sensor.time"),"%H:%M")) -%}
                 {% set timeleave = as_timestamp(strptime(states("input_datetime.leave_home"),"%H:%M:%S")) -%}
                 {% set timediff = ((timeleave - timenow)/60) -%}
-                {{ timediff|int == 0 }}
+                {{ timediff|int <= 5 }}
           - service: script.all_media_off
 
   #---------------------------------------------------------------------------#
   #= TRACKING
 
-      - id: 'location_update'   # updat sensor.michbaeck on location changes
+      - id: location_update   # update sensor.michbaeck on location changes
         alias: 'location_update'
         trigger:
           - platform: state
@@ -3566,7 +3653,9 @@
                   {%- set timenow = as_timestamp(strptime(states("sensor.time"),"%H:%M")) -%}
                   {%- set timetrigger = as_timestamp(strptime(as_timestamp(trigger.to_state.last_changed)|timestamp_custom("%H:%M",true),"%H:%M")) -%}
                   {%- set window = (timenow-timetrigger)/60 > 10 -%}
+
                   {{- "Location update von: " + states("input_select.michbaeck") + " zu: " -}}
+
                   {%- if trigger.entity_id == 'device_tracker.beacon_home' and trigger.to_state.state == 'home' -%}
                     {%- set x = "home" -%}
                   {%- elif trigger.entity_id == 'device_tracker.beacon_work' and trigger.to_state.state == 'work' -%}
@@ -3578,6 +3667,7 @@
                   {%- elif trigger.entity_id == 'device_tracker.cb58345aa18f4028a72da9fb0c30e6f9' and not trigger.to_state.state == 'home' -%}
                     {%- set x = trigger.to_state.state  -%}
                   {%- endif -%}
+
                   {{x}}
           - service: input_select.select_option
             data_template:  
@@ -3610,10 +3700,29 @@
                   {{ trigger.to_state.state }}
                 {%- endif -%}
 
-      #[todo] when leaving work → travel_home
+      #[test] when leaving work → travel_home
+      - id: michbaeck_leaving_work    # when leaving office for 10min + after 15:00, set routine to travel_home (-> climate on)
+        alias: michbaeck_leaving_work
+        trigger:
+          - platform: state
+            entity_id: device_tracker.beacon_work
+            to: not_home
+            for:
+              minutes: 10
+        condition:
+          condition: time
+          after: '15:00'
+        action:
+          - service: notify.homeassistant_debug
+            data_template:
+              message: >-
+                {{ now()|string + " - \"automation.michbaeck_leaving_work\" triggered by " + trigger.entity_id + " changing its state FROM: " + trigger.from_state.state|string + " TO: " + trigger.to_state.state|string }}  
+          - service: script.daily_routine
+            data:
+              event: leave_work
 
-      - id: 'michbaeck_arrival_home'    # set state to home on arrival to enable/disable other automations
-        alias: 'michbaeck_arrival_home'
+      - id: michbaeck_arrival_home    # set state to home on arrival to enable/disable other automations
+        alias: michbaeck_arrival_home
         initial_state: true
         trigger:    # when michbaeck arrives
           platform: state
@@ -3633,6 +3742,7 @@
                 - switch.computer
                 - light.michbaeck_auto
                 - input_boolean.michbaeck_arrival
+                - automation.auto_color_michbaeck_1
           - service: script.alexa_volume    # set radio volume
             data:
               device: Stereopaar
@@ -3656,8 +3766,6 @@
               {{ is_state("script.alexa_says", "off") }}
           - service: script.alexa_says    # alexa tts text
             data_template:
-              # device: Schlafzimmer
-              # entity: script.michbaeck_arrival_home
               text: >-
                 {{-
                   [
@@ -3669,6 +3777,10 @@
                   ]|random
                 -}}
                 {{- " Es sind " + states("sensor.temp_michbaeck")|int|string + " Grad in deinem Zimmer." -}}
+          - wait_template: >-
+              {{ is_state("script.alexa_says", "off") }}
+          - service: script.alexa_summary
+          
 
       - id: 'michbaeck_leaving_home'    # set state to away on leave to enable/disable other automations
         alias: 'michbaeck_leaving_home'
@@ -3788,7 +3900,7 @@
           - service: notify.homeassistant_debug
             data_template:
               message: >-
-                {{ now()|string + " - automation.climate_michbaeck_fan_speed triggered by " + trigger.entity + " - calling script.climate_michbaeck_fan_speed"}} 
+                {{ now()|string + " - automation.climate_michbaeck_fan_speed triggered by " + trigger.entity_id + " - calling script.climate_michbaeck_fan_speed"}} 
           - service: script.climate_michbaeck_fan_speed
 
       - id: 'climate_michbaeck_ac_temp'   # when changing climate temp mqtt-publish and adjust AC temp
@@ -3808,36 +3920,6 @@
               entity_id: climate.michbaeck_ac
               temperature: >-
                   {{ state_attr("climate.michbaeck", "temperature")|float + states("input_number.climate_michbaeck_tempdiff")|int  }}
-
-      #> - id: 'climate_michbaeck_away'    # [debug off] control climate on location change
-        # alias: 'climate_michbaeck_away'
-        # #. initial_state: true
-        # trigger:
-        #   - platform: state
-        #     entity_id: sensor.michbaeck
-        # action:
-        #   #. - service: notify.homeassistant_debug
-        #     #. data_template:
-        #     #.   message: >-
-        #     #.     {%- if trigger.to_state.state == "home" and is_state("input_boolean.climate_michbaeck_away", "on")  -%}
-        #     #.       {% set x = "script.climate_michbaeck_home" %}
-        #     #.     {%- elif trigger.to_state.state != "home" and is_state("input_boolean.climate_michbaeck_away", "off") -%}
-        #     #.       {% set x = "script.climate_michbaeck_away" %}
-        #     #.     {%- endif -%}
-
-        #     #.     {{ 
-        #     #.       now()|string + " - automation.climate_michbaeck_away triggered by " + trigger.entity_id + " changing its state FROM: \"" + trigger.from_state.state|string + "\" TO: \"" + trigger.to_state.state|string + "\"
-        #     #.       - state of climate.michbaeck is: \"" + states("climate.michbaeck")|string + "\"
-        #     #.       - input_boolean.climate_michbaeck_away is : \"" + states("input_boolean.climate_michbaeck_away") + "\"
-        #     #.       - current target temp is: \"" + state_attr("climate.michbaeck", "temperature")|string + "\"
-        #     #.       - calling " + x
-        #     #.     }}
-        #   - service_template: >-
-        #       {%- if trigger.to_state.state == "home" and is_state("input_boolean.climate_michbaeck_away", "on")  -%}
-        #         {{ "script.climate_michbaeck_home" }}
-        #       {%- elif trigger.to_state.state != "home" and is_state("input_boolean.climate_michbaeck_away", "off") -%}
-        #         {{ "script.climate_michbaeck_away" }}
-        #       {%- endif -%}
 
       - id: 'climate_michbaeck_winter_fan'    # when heater on turn on ceiling fan every 20min
         alias: 'climate_michbaeck_winter_fan'
@@ -4051,7 +4133,7 @@
             #.   state: 'off'
             - condition: template
               value_template: >-
-                {{ states("sensor.light_bad")|default(0)|float < states("input_number.trigger")|default(0)|float }}
+                {{ states("sensor.light_bad")|default(0)|float < states("input_number.motion_bad_trigger")|default(0)|float }}
         action:
           - service: notify.homeassistant_debug
             data_template:
@@ -4402,7 +4484,7 @@
           - service: notify.homeassistant_debug
             data_template:
               message: >-
-                {{ now()|string + " - automation.solder_light triggered by " + trigger.entity_id }} - calling {% if trigger.to_state.state == "on" %}light.turn_on{% elif trigger.to_state.state == "off" %}light.turn_off{% endif %} ENTITY = light.ikea
+                {{ now()|string + " - automation.solder_light triggered by " + trigger.entity_id }} - calling {% if trigger.to_state.state == "on" %}light.turn_on{% elif trigger.to_state.state == "off" %}light.turn_off{% endif %} ENTITY_ID = light.ikea
           - service_template: >-
               {%- if trigger.to_state.state == "on" -%}
                 light.turn_on
@@ -4494,7 +4576,7 @@
   #---------------------------------------------------------------------------#
   #= PLANT
 
-      - id: 'plant_update'    # request states, if unknown
+      - id: plant_update    # request states, if unknown
         alias: 'plant_update'
         initial_state: true
         trigger:
@@ -4518,7 +4600,7 @@
                   calling script.plant_update
           - service: script.plant_update
 
-      - id: 'plant_1_issue'   # notify when plant gets too dry
+      - id: plant_1_issue   # notify when plant gets too dry
         alias: 'plant_1_issue'
         trigger:
           platform: state
@@ -4552,7 +4634,7 @@
               message: >-
                 {{ "Wert für " + state_attr(trigger.entity_id, "friendly_name") + " beträgt " + trigger.to_state.state_with_unit|string + " und sollte gegossen werden." }}
 
-      - id: 'plant_2_issue'   # notify when plant gets too dry
+      - id: plant_2_issue   # notify when plant gets too dry
         alias: 'plant_2_issue'
         trigger:
           platform: state
@@ -4649,7 +4731,7 @@
               title: >-
                 {{ state_attr(trigger.entity_id, "friendly_name") }}
               message: >-
-                {{ state_attr(trigger.entity_id, "friendly_name") + " gegossen. Wert beträgt nun " + states(trigger.entity_id)|string }}
+                {{ state_attr(trigger.entity_id, "friendly_name") + " gegossen. Wert beträgt nun " + states(trigger.entity_id)|string + "%" }}
 
       - id: plant_2_water    # water flower if < 30, update state >> should retrigger if more water needed
         alias: plant_2_water
@@ -4713,7 +4795,7 @@
               title: >-
                 {{ state_attr(trigger.entity_id, "friendly_name") }}
               message: >-
-                {{ state_attr(trigger.entity_id, "friendly_name") + " gegossen. Wert beträgt nun " + states(trigger.entity_id)|string }}
+                {{ state_attr(trigger.entity_id, "friendly_name") + " gegossen. Wert beträgt nun " + states(trigger.entity_id)|string + "%" }}
 
       - id: plant_water_empty   # notify on empty water tank
         alias: plant_water_empty
@@ -4816,7 +4898,6 @@
               message: >-
                 {{ "Badewanne ist voll. Bitte Wasser abstellen" }}
 
-
       - id: 'battery_alert'   # alerts on empty battery or if unavailable
         alias: 'battery_alert'
         trigger:
@@ -4863,8 +4944,6 @@
               {{ is_state("script.alexa_says", "off") }}
           - service: script.alexa_says                                                # voice
             data_template:
-              # entity: automation.startup_checks
-              # device: Schlafzimmer
               text: >-
                 {%- if trigger.to_state.state == "unavailable" -%}
                   {{ state_attr(trigger.entity_id, "friendly_name") }} ist nicht verfügbar und sollte geprüft werden.
@@ -4965,8 +5044,6 @@
               {{ is_state("script.alexa_says", "off") }}
           - service: script.alexa_says    # alexa tts text
             data_template:
-              # device: Schlafzimmer
-              # entity: script.dwd_warning_current
               text: >-
                   {{ "Es gibt eine Stufe " + states("sensor.dwd_current_warning_level")|string + " Warnung vom DWD, Sie lautet " + state_attr("sensor.dwd_current_warning_level", "warning_1_headline") }}.
 
@@ -5002,10 +5079,30 @@
               {{ is_state("script.alexa_says", "off") }}
           - service: script.alexa_says    # alexa tts text
             data_template:
-              # device: Schlafzimmer
-              # entity: script.dwd_warning_advance
               text: >-
                   {{ "Es gibt eine Stufe " + states("sensor.dwd_advance_warning_level")|string + " Warnung vom DWD, Sie lautet " + state_attr("sensor.dwd_advance_warning_level", "warning_1_headline") }}.
+
+  #---------------------------------------------------------------------------#
+  #= CONTROLLER
+        
+      ### XIAOMI CUBE 
+      - id: cube    # [debug on]
+        alias: cube
+        trigger:
+          - platform: event
+            event_type: xiaomi_aqara.cube_action
+            event_data:
+              entity_id: binary_sensor.xiaomi_cube
+        action:
+          - service: notify.homeassistant_debug
+            data_template:
+              message: >-
+                {{ now()|string + " - automation.cube has been triggered - calling script.cube_" + trigger.event.data.action_type|string + " with VALUE = " + trigger.event.data.action_value|default(0)|string }}
+          - service_template: >-
+              {{ "script.cube_" + trigger.event.data.action_type|string }}
+            data_template:
+              value: >-
+                {{ trigger.event.data.action_value|default(0)|float }}
 
   #---------------------------------------------------------------------------#
   #= TICKER
@@ -5531,7 +5628,7 @@
           - service: variable.set_variable
             data:
               variable: light_baseline_aussen
-              value: 3400
+              value: 2000
           - service: variable.set_variable
             data:
               variable: sun_elevation_min
@@ -5626,6 +5723,39 @@
             data:
               entity_id: input_datetime.leave_home
               time: '07:30:00'
+          - service: input_datetime.set_datetime
+            data:
+              entity_id: 
+                - input_datetime.climate_1_start
+                - input_datetime.climate_2_start
+                - input_datetime.climate_3_start
+                - input_datetime.climate_4_start
+                - input_datetime.climate_5_start
+              time: '06:00:00'
+          - service: input_datetime.set_datetime
+            data:
+              entity_id: 
+                - input_datetime.climate_6_start
+                - input_datetime.climate_7_start
+              time: '10:00:00'
+
+          - service: input_datetime.set_datetime
+            data:
+              entity_id: 
+                - input_datetime.climate_7_end
+                - input_datetime.climate_1_end
+                - input_datetime.climate_2_end
+                - input_datetime.climate_3_end
+                - input_datetime.climate_4_end
+              time: '23:00:00'
+
+
+          # - service: input_datetime.set_datetime
+          #   data:
+          #     entity_id: 
+          #       - input_datetime.climate_5_end
+          #       - input_datetime.climate_6_end
+          #     time: '06:00:00'
 
           # mark database as valid
           - service: variable.set_variable
@@ -5713,9 +5843,6 @@
                 {% endif %}
           - service: script.alexa_says    # alexa tts text
             data_template:
-              # device: Schlafzimmer 1
-              # delay: 'yes'
-              # entity: automation.wecker_helper
               text: >-
                 {%- if is_state("binary_sensor.alarm_helper", "on") -%}
                   Wecker wurde aktiviert.
@@ -5738,7 +5865,7 @@
               title: WECKER
               message: >-
                 {{ now()|string + " - " }}script.wecker_fadein called. update routine, pass EVENT = alarm_fadein
-          - service: script.daily_routine                                             # set condition to suppress some other automations
+          - service: script.daily_routine   # set condition to suppress some other automations
             data:
               event: alarm_fadein
           - service: notify.homeassistant_debug
@@ -5746,7 +5873,7 @@
               title: WECKER
               message: >-
                 {{ now()|string + " - " }}script.wecker_fadein. enable AC
-          - service: climate.set_operation_mode                                       # enable AC
+          - service: climate.set_operation_mode   # enable AC
             data:
               entity_id: climate.michbaeck_ac
               operation_mode: cool
@@ -5755,7 +5882,7 @@
               title: WECKER
               message: >-
                 {{ now()|string + " - " }}script.wecker_fadein. turn on light.michbaeck_hue
-          - service: light.turn_on                                                    # turn lights on, minimal brightness
+          - service: light.turn_on    # turn lights on, minimal brightness
             data:
               entity_id: light.michbaeck_hue
               kelvin: 1000
@@ -5765,14 +5892,14 @@
               title: WECKER
               message: >-
                 {{ now()|string + " - " }}script.wecker_fadein. increase brightness for {{ (states("input_number.wecker_fading")|int)|string }} min
-          - service: light.turn_on                                                    # start fade in 
+          - service: light.turn_on    # start fade in 
             data_template:
               entity_id: light.michbaeck_hue
               kelvin: 3000
               brightness: 255
               transition: >-
                 {{ states("input_number.wecker_fading")|default(30)|int * 60 }}                   
-          - delay: '00:{{ states("input_number.wecker_fading")|default(30)|int }}:00'             # delay as long as fade in lasts
+          - delay: '00:{{ states("input_number.wecker_fading")|default(30)|int }}:00'   # delay as long as fade in lasts
           - service: notify.homeassistant_debug
             data_template:
               title: WECKER
@@ -5862,8 +5989,6 @@
                   calling script.alexa_says
           - service: script.alexa_says
             data_template:
-              # entity: script.wecker_voice
-              # device: Schlafzimmer 1
               text: >-
                 {{ text + " "}}
                 {%- if is_state("sensor.daily_routine", "alarm") -%}
@@ -5887,7 +6012,6 @@
                   Tür michbaeck is open. Calling script.alexa_says_2 in addition.
           - service: script.alexa_says_2
             data_template:
-              # entity: script.wecker_voice
               device: Küche
               text: >-
                 {{ text }}
@@ -5951,8 +6075,6 @@
               {{ is_state("script.alexa_says", "off") }}
           - service: script.alexa_says    # alexa say 'guten morgen'
             data_template:
-              # entity: script.wakeup
-              # device: Schlafzimmer 1
               text: >-
                 {%- set weather = state_attr("weather.yahoo", "forecast")[0].condition|string -%}
                 {%- if weather == "cloudy" -%}
@@ -6031,8 +6153,6 @@
               {{ is_state("script.alexa_says", "off") }}
           - service: script.alexa_says    # alexa tts text
             data_template:
-              # entity: automation.bedtime
-              # device: Schlafzimmer
               text: >-
                 {{
                   [
@@ -6059,8 +6179,6 @@
               {{ is_state("script.alexa_says", "off") }}
           - service: script.alexa_says    # say good night and tomorrow's weather
             data_template:
-              # entity: automation.bedtime
-              # device: Schlafzimmer
               text: >-
                 {#- "if night, then today's forecast; else tomorrow's" -#}
                 {%- if now().hour|int <= 12 -%}
@@ -6157,77 +6275,6 @@
 
   #---------------------------------------------------------------------------#
   #= TRACKING
-
-      #> michbaeck_leaving_home:
-        # sequence:
-          # - service: script.ticker_generator
-          #   data:
-          #     text: Ciao!
-          # - service: script.daily_routine
-          #   data:
-          #     event: leave_home
-          # - service: homeassistant.turn_off   # turn off lights michbaeck, floor, kitchen
-          #   data:
-          #     entity_id:
-          #       - light.michbaeck_all
-          #       - light.michbaeck_auto
-          #       - light.xiaomi_gateway
-          # - service: script.all_media_off
-          # - service: notify.ios_brain
-          #   data:
-          #     message: 'Licht und Radio ausgeschaltet. Alarm aktiviert'
-          #     title: 'Wohnung verlassen'
-          #     data:
-          #       push:
-          #         sound: 'door_chime.wav'
-
-      #> michbaeck_arrival_home:
-        # sequence:
-          # - service: script.daily_routine
-          #   data:
-          #     event: arrive_home
-          # - service: homeassistant.turn_on    # switch on light and PC
-          #   data:
-          #     entity_id:
-          #       - switch.computer
-          #       - light.michbaeck_auto
-          #       - input_boolean.michbaeck_arrival
-          # - service: script.alexa_volume    # set radio volume
-          #   data:
-          #     device: 'Schlafzimmer'
-          #     volume: '40'
-          # - service: script.alexa_play    # play radio
-          #   data:
-          #     device: 'Schlafzimmer'
-          #     content: 'wdr5'
-          # - service: notify.iospush   # send push (iospush = iphone+ipad)
-          #   data_template:
-          #     message: 'Computer/Radio/Licht eingeschaltet. Alarm deaktiviert.'
-          #     title: 'Wohnung betreten'
-          #     data:
-          #       push:
-          #         sound: 'door_chime.wav'
-          # - wait_template: >-
-          #     {{ is_state("binary_sensor.door_michbaeck", "on") }}
-          # - delay:
-          #     seconds: 5
-          # - wait_template: >-
-          #     {{ is_state("script.alexa_says", "off") }}
-          # - service: script.alexa_says    # alexa tts text
-          #   data_template:
-          #     device: Schlafzimmer
-          #     entity: script.michbaeck_arrival_home
-          #     text: >-
-          #       {{-
-          #         [
-          #           "Hallo Michbaeck,",
-          #           "Willkommen zurück,",
-          #           "Hey Michbaeck,",
-          #           "Moin Moin,",
-          #           "Hi,"
-          #         ]|random
-          #       -}}
-          #       {{- " Es sind " + states("sensor.temp_michbaeck")|int|string + " Grad in deinem Zimmer." -}}
 
       daily_routine:    # [debug on]
         sequence:
@@ -6378,8 +6425,6 @@
               {{ is_state("script.alexa_says", "off") }}
           - service: script.alexa_says
             data_template:
-              # entity: automation.climate_michbaeck
-              # device: Schlafzimmer
               text: >-
                 {% if is_state("binary_sensor.climate_michbaeck_helper", "on") -%}
                   {% set state = "ein." %}
@@ -6932,8 +6977,6 @@
             timeout: '00:01:10'
           - service: script.alexa_says    # alexa tts text
             data_template:
-              # entity: script.plant_update
-              # device: Schlafzimmer
               text: >-
                 {%- if states("sensor.plant_michbaeck_1")|int > 20 and states("sensor.plant_michbaeck_2")|int > 20 -%}
                   Deinen Pflanzen geht es gut,
@@ -6956,8 +6999,6 @@
               {{ is_state("script.alexa_says", "off") }}
           - service: script.alexa_says    # alexa tts text
             data_template:
-              # entity: automation.plant_1_issue
-              # device: Schlafzimmer
               text: >-
                 Die große Pflanze braucht Wasser, Feuchtigkeit beträgt nur noch {{ states("sensor.plant_michbaeck_1") }} Prozent.
           - service: script.ticker_generator
@@ -6979,8 +7020,6 @@
               {{ is_state("script.alexa_says", "off") }}
           - service: script.alexa_says    # alexa tts text
             data_template:
-              # entity: automation.plant_2_issue
-              # device: Schlafzimmer
               text: >-
                 Die kleine Pflanze braucht Wasser, Feuchtigkeit beträgt nur noch {{ states("sensor.plant_michbaeck_2") }} Prozent.
           - service: script.ticker_generator
@@ -7108,6 +7147,56 @@
 
   #---------------------------------------------------------------------------#
   #= MEDIA
+
+      alexa_summary:
+        sequence:
+          - condition: template
+            value_template: >-
+                {% set x %}
+                  {% for state in states.persistent_notification -%}
+                    {%- if loop.last -%}
+                      {{- state.attributes.message -}}.
+                    {%- else -%}
+                      {{- state.attributes.message + ", " -}}
+                    {%- endif -%}
+                  {% else %}
+                    false
+                  {%- endfor %}
+                {% endset %}
+
+                {{ x != false }}
+          - wait_template: >-
+              {{ is_state("script.alexa_says", "off") }}
+          - service: script.alexa_says
+            data_template:
+              text: >-
+                {% set x %}
+                  {% for state in states.persistent_notification -%}
+                    {%- if loop.last -%}
+                      {{- state.attributes.message -}}.
+                    {%- else -%}
+                      {{- state.attributes.message + ", " -}}
+                    {%- endif -%}
+                  {% else %}
+                    false
+                  {%- endfor %}
+                {% endset %}
+
+                {% if x %}
+                  {{ 
+                    [
+                      ["Dies","Das"]|random + " ist passiert während du weg warst, ", 
+                      "Ich habe folgende Neuigkeiten für dich, "
+                    ]|random + x 
+                  }}
+                {% else %}
+                  {{
+                    [
+                      "Ich habe keine Neuigkeiten für dich", 
+                      "Es ist nichts aufregendes passiert während du weg warst"
+                    ]|random 
+                  }}
+                {% endif %}
 
       alexa_volume:   # (device, volume)
         alias: Alexa Volume

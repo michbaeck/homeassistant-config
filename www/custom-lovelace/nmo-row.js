@@ -57,20 +57,16 @@ class nmoRow extends Polymer.Element {
     `
   }
 
-  // tertiary(info) {
-  //   return Polymer.html`
-  //   <div class="secondary">
-  //     ${info.lead}${info.data}${info.trail}
-  //   </div>
-  //   `;
-  // }
-
   update() {
     this._icon = this.closed ? 'mdi:chevron-up' : 'mdi:chevron-down';   // assign icon depending on open/close state
 
     // assign class depending on open/close state (assign = do open or close)
     if(this.$) {
-      this.$.rows.className = this.closed ? 'closed' : 'open'; // this = FoldRow, $ = shadowRoot
+      if(this.$.rows.childElementCount > 0) {
+        this.$.rows.className = this.closed ? 'closed' : 'open'; // this = mno, $ = shadowRoot
+      } else {
+        this.$.head.querySelector("div.toggle").remove();   //  if just head w/o items defined, remove toggle arrow
+      }
     }
   }
 
@@ -85,25 +81,28 @@ class nmoRow extends Polymer.Element {
     super.ready();    // trigger parent class (hui-entities-card) to call its ready function
 
     let conf = [];
-    let head = this._config.head;
-    let items = this._config.items;
+    let items = [];
+    if(this._config.items) items = this._config.items;
 
-    // make string head to object and move string to conf.head.entity
-    if(typeof head === 'string') {
-      head = {entity: head};
-    }
+    if(this._config.head) {
+      let head = this._config.head;
 
-    conf.push(head);    // append head.entity to conf (conf[x].entity = 'domain.entity_name')
-      // conf.entity[] == head
+      // make string head to object and move string to conf.head.entity
+      if(typeof head === 'string') {
+        head = {entity: head};
+      }
 
-    // read group attributes and copy list of entities to items
-    if(head.entity && head.entity.startsWith('group')) {
-      items = this._hass.states[head.entity].attributes.entity_id;
+      conf.push(head);    // append head.entity to conf (conf[x].entity = 'domain.entity_name')
+        // conf.entity[] == head
+
+      // read group attributes and copy list of entities to items
+      if(head.entity && head.entity.startsWith('group')) {
+        items = this._hass.states[head.entity].attributes.entity_id;
+      }
     }
 
     // makes string item to object and moves string to conf.entity
-    items.forEach((i) => {
-
+    if(items.length > 0) items.forEach((i) => {
       if(typeof i === 'string') i = {entity: i};    // append items.entity to conf (conf[x].entity = 'domain.entity_name')
           // item[0].entity == item0
           // item[1].entity == item1 
@@ -121,6 +120,7 @@ class nmoRow extends Polymer.Element {
           // conf[2].secondary_info == last-changed
           // etc
     });
+
 
     this.items = [];    // declare array
 
@@ -153,7 +153,13 @@ class nmoRow extends Polymer.Element {
         //!conf[1].infos[1].trail
       });
 
-      this._addHeader(child, conf.shift()) // remove conf.shift (= conf[0].entity) and move first row of hidden entities on top
+      if(this._config.head) { // remove conf.shift (= conf[0].entity) and move first row of hidden entities on top
+        // if(this._config.items) {
+          this._addHeader(child, conf.shift());
+        // } else {
+        //   this._addRow(child, conf.shift());
+        // }
+      }
 
       // remove next entity rows and place below header using custom style template
       while(child = nextChild(divs)) {
@@ -172,6 +178,13 @@ class nmoRow extends Polymer.Element {
 
     if(row.tagName === 'DIV') {
       row = row.children[0]; // row = full row container, row.children = entity row
+    }
+
+    if(conf.infos) {
+      row._config.infos = conf.infos;
+      //| conf.infos[0].data = "color_temp"
+      //| conf.infos[0].lead = "Temperatur "
+      //| conf.infos[0].trail = " mireds"
     }
 
     this.items.push(row);
@@ -193,6 +206,17 @@ class nmoRow extends Polymer.Element {
         }
       }
     }
+    // cut
+    // let arrow = this.$.head.querySelector("div.toggle");
+    
+    // must be first child here
+    // let parent = this.$.head.firstElementChild.firstElementChild.shadowRoot.firstElementChild;
+    // parent.insertBefore(arrow, parent.firstChild);
+
+    // new position:
+    // this.$.head.firstElementChild.firstElementChild.shadowRoot.firstChildElement.querySelector("div.toggle")
+
+    // $0.$.head.firstElementChild.firstElementChild.shadowRoot.insertBefore($0.$.head.querySelector("div.toggle"),$0.$.head.firstElementChild.firstElementChild.shadowRoot.firstChild)
   }
   
   _addRow(row, conf)
@@ -207,77 +231,14 @@ class nmoRow extends Polymer.Element {
       // let second;
       // second = entity_row.root.querySelector("hui-generic-entity-row").root.querySelector("div.flex").querySelector("div.info").querySelector("div.secondary");
   
-
       if(conf.infos) {
         entity_row._config.infos = conf.infos;
         //| conf.infos[0].data = "color_temp"
         //| conf.infos[0].lead = "Temperatur "
         //| conf.infos[0].trail = " mireds"
-        // let infos = [];
-
-
-        // conf.infos.forEach((info) => {
-        //   let third = document.createElement('div');
-        //   third.style.fontStyle = 'italic';
-        //   // third.style.paddingLeft = '16px';
-          
-
-        //   if(typeof info === 'string') {
-        //     let lead = info + ": ";
-        //     let data = this._hass.states[conf.entity].attributes[info];
-        //     let trail = "";
-        //     info = {data: data, lead: lead, trail: trail};
-        //   }
-
-        //   if(info.entity) {
-        //     if (info.attribute) {
-        //       info.data = this._hass.states[info.entity].attributes[info.attribute];
-        //     } else {
-        //       info.data = this._hass.states[info.entity].state;
-        //     }
-        //   }
-
-        //   if(info.template){
-        //     // info.data = this._hass.callApi('post', 'template', '{"template": "${info.template}"}');
-        //     this._hass.callApi("POST", "template", { template: info.template }).then(
-        //       function(processed) {
-        //         info.data = "ok"
-        //       }.bind(this),
-        //       function(error) {
-        //         info.data = "fail";
-        //       }.bind(this)
-        //     );
-        //     // info.data = this._hass.callWS({
-        //     //   type: 'template',
-        //     //   template: info.template,
-        //     // });
-        //   }
-
-        //   if (!info.lead) info.lead = "";
-        //   if (!info.data) info.data = "";
-        //   if (!info.trail) info.trail = "";
-
-        //   third.innerHTML = `
-        //       ${info.lead}${info.data}${info.trail}
-        //   `;
-  
-        //   second.appendChild(third);
-
-        // });
       }
-
-      // if(second.childElementCount > 6) {
-      //   let root = entity_row.root.querySelector("hui-generic-entity-row");
-      //   root.style.alignItems = 'flex-start';
-      //   root.root.querySelector("div.flex").style.alignItems = 'flex-start';
-      // }
-
       // customizing end
   
-
-
-
-
       this.items.push(entity_row); // entity-row
     } else {
       this.items.push(row); // text
@@ -334,28 +295,27 @@ class nmoRow extends Polymer.Element {
           }
         }
 
+
         if(info.template){
           // info.data = this._hass.callApi('post', 'template', '{"template": "${info.template}"}');
           this._hass.callApi("POST", "template", { template: info.template }).then(
             function(processed) {
               info.data = processed;
-            }.bind(this),
+            }.bind(info),
             function(error) {
               info.data = error.body.message;
-            }.bind(this)
+            }.bind(info)
           );
-          // info.data = this._hass.callWS({
-          //   type: 'template',
-          //   template: info.template,
-          // });
         }
 
-        if (!info.lead) info.lead = "";
-        if (!info.data) info.data = "";
-        if (!info.trail) info.trail = "";
+        if(info.text) info.data = info.text;
 
-        if(data_old != info.data) {
+        if(!info.lead) info.lead = "";
+        if(!info.data) info.data = "";
+        if(!info.trail) info.trail = "";
 
+        // if(data_old != info.data || info.template) {
+        if(!(info.data == "")) {
           if(!second.querySelector("#"+idstring)) {
             third = document.createElement('div');
             third.style.fontStyle = 'italic';
@@ -364,13 +324,14 @@ class nmoRow extends Polymer.Element {
           } else {
             third = second.querySelector("#"+idstring);
           }
-
+          
           third.innerHTML = `
-              ${info.lead}${info.data}${info.trail}
+              ${info.lead}\t${info.data}${info.trail}
           `;
 
           if(!second.querySelector("#"+idstring)) second.appendChild(third);
         }
+        // }
       });
 
       if(second.childElementCount > 6) {
@@ -412,26 +373,57 @@ customElements.define('nmo-row', nmoRow);
 .     title: Folding entities
 .     entities:
 .       - light.bed_light
-*       - type: custom:fold-entity-row
-*         head: sensor.yr_symbol
-*         items:
-*           - sensor.outside_humidity
-*           - sensor.outside_temperature
-!           - entity: light.bedroom
-!             infos:
-!               - data: sensor.lux_bedroom
-!                 lead: "Illuminance "
-!                 trail: "lx"
+=       - type: custom:fold-entity-row
+=         head: sensor.yr_symbol
+=         items:
+=           - sensor.outside_humidity
+=           - sensor.outside_temperature
+*           - entity: light.bedroom
+*             secondary_info: last-changed
+*             infos:
+*               - data: sensor.lux_bedroom
+*                 lead: "Illuminance "
+*                 trail: "lx"
+*               - text: this is just a static remark
+*               - template: '{{ state_attr("sun.sun", "elecation")|string + "°" }}'
+*                 lead: 'sun is at: '
 .       - light.bed_light
-*       - type: custom:fold-entity-row
-*         head:
-*           type: section
-*           label: Lights
-*         group_config:
-*           secondary_info: last-changed
-*         items:
-*           - light.bed_light
-*           - light.ceiling_lights
-*           - light.kitchen_lights
+=       - type: custom:fold-entity-row
+=         head:
+=           type: section
+=           label: Lights
+=         group_config:
+=           secondary_info: last-changed
+=         items:
+=           - light.bed_light
+=           - light.ceiling_lights
+=           - light.kitchen_lights
 .       - light.bed_light
+=       - type: custom:fold-entity-row
+=         head:
+=           entity: light.bedroom
+*           infos: 
+*             - template: >
+*                 {% if is_state("input_boolean.show_details", "on") %}
+*                   {{ states("sensor.lux_bedroom")|string + "lx" }}
+*                 {% endif %}
+.       - light.bed_light
+
+
+!tree:
+
+* cut
+let arrow = this.$.head.querySelector("div.toggle") 
+
+* must be first child here
+let parent = this.$.head.firstElementChild.firstElementChild.shadowRoot
+parent.insertBefore(arrow, parent.firstElementChild)
+
+this.$.rows.
+
+nmo-row
+
+
+
 */
+

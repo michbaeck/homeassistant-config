@@ -160,9 +160,6 @@ resources:
   - url: /local/custom-lovelace/nmo-row.js?v=0.0.1
     type: js
 
-  - url: /local/custom-lovelace/not-my-own-card.js?v=0.0.2
-    type: js
-
   - url: /local/custom-lovelace/graph-card/graph-card.js?v=2
     type: js
     # https://community.home-assistant.io/t/lovelace-custom-history-graph/71450
@@ -182,9 +179,6 @@ resources:
     type: js
 
   - url: /local/custom-lovelace/slider-entity-row.js?v=1
-    type: js
-
-  - url: /local/custom-lovelace/fold-entity-row.js?v=1
     type: js
 
   - url: /local/custom-lovelace/swipe-card/swipe-card.js?v=1.1.0
@@ -385,26 +379,45 @@ views:
             title: Anwesenheit
             show_header_toggle: false
             entities:
-              - type: custom:fold-entity-row
-                head: sensor.michbaeck
-                name: michbaeck
+              - type: custom:nmo-row
+                head: 
+                  entity: sensor.michbaeck
+                  infos:
+                    - entity: sensor.daily_routine
                 open: false
                 items:
                   - entity: input_select.michbaeck
                     name: Ort
-                  - entity: proximity.home
-                    name: Distanz
-                  - entity: sensor.dir_of_travel
-                    name: Richtung
+                    # infos:
+                    #   - template: >
+                    #       {% if is_state("input_boolean.view_details", "on") %}
+                    #         {{ "Entfernung: " + states("proximity.home")|string }}
+                    #       {% endif %}
+                    #   - template: >
+                    #       {% if is_state("input_boolean.view_details", "on") %}
+                    #         {{ "Richtung: " + states("sensor.dir_of_travel") }}
+                    #       {% endif %}
                   - entity: input_select.daily_routine
                     name: Routine
                   - entity: script.wakeup
                     name: Aufstehen
+                    # infos:
+                    #   - template: >
+                    #       {% if not states.script.plant_update.attributes.last_triggered is none %}
+                    #         {{ "Zuletzt: " + states.script.plant_update.attributes.last_triggered|string }}
+                    #       {% endif %}
                   - entity: script.bedtime_actions
                     name: Schlafen gehen
-              - type: custom:fold-entity-row
+                    # infos:
+                    #   - template: >
+                    #       {% if not states.script.bedtime_actions.attributes.last_triggered is none %}
+                    #         {{ "Zuletzt: " + states.script.bedtime_actions.attributes.last_triggered|string }}
+                    #       {% endif %}
+              - type: custom:nmo-row
                 head: binary_sensor.johannes
                 open: false
+                group_config:
+                  secondary_info: last-changed
                 items:
                   - entity: binary_sensor.johannes_notebook
                   - entity: binary_sensor.johannes_handy
@@ -426,15 +439,19 @@ views:
             type: entities
             show_header_toggle: false
             entities:
-              - type: custom:fold-entity-row    # flux
-                head:  sensor.flux
+              - type: custom:nmo-row    # flux
+                head: 
+                  entity: sensor.flux
+                  infos:
+                    - entity: sensor.sun_elevation
+                      lead: "Sonnenstand:"
+                      trail: "°"
                 items: 
-                  # - type: custom:slider-entity-row
                   - entity: input_number.flux_adjust
-                  - entity: sensor.sun_elevation
-              - type: custom:fold-entity-row    # kueche
-                head:  light.kueche
-                name: Küche
+              - type: custom:nmo-row    # kueche
+                head: 
+                  entity: light.kueche
+                  name: Küche
                 items: 
                   - type: custom:slider-entity-row
                     entity: light.kueche
@@ -443,13 +460,18 @@ views:
                     name: Lichtsensor
                   - entity: binary_sensor.motion_kueche
                     name: Bewegungsmelder
+                    infos:
+                      - entity: binary_sensor.motion_kueche_helper
+                        lead: "Helper:"
+                  # - type: divider
                   - entity: input_boolean.motion_kueche
                     name: Bewegungsmelder aktivieren
                   - entity: binary_sensor.motion_kueche_helper
                     name: helper
-              - type: custom:fold-entity-row    # flur
-                head:  light.flur
-                name: Flur
+              - type: custom:nmo-row    # flur
+                head: 
+                  entity: light.flur
+                  name: Flur
                 items: 
                   - type: custom:slider-entity-row
                     entity: light.flur
@@ -462,31 +484,38 @@ views:
                     name: Lichtsensor
                   - entity: binary_sensor.motion_flur
                     name: Bewegungsmelder
+                    infos:
+                      - entity: binary_sensor.motion_flur_helper
+                        lead: "Helper:"
+                  # - type: divider
                   - entity: input_boolean.motion_flur
                     name: Bewegungsmelder aktivieren
-                  - entity: binary_sensor.motion_flur_helper
-                    name: helper
-              - type: custom:fold-entity-row    # bad
+              - type: custom:nmo-row    # bad
                 head:  light.bad
                 items: 
                   - entity: sensor.light_bad
                     name: Lichtsensor
                   - entity: binary_sensor.motion_bad
                     name: Bewegungsmelder
+                    infos:
+                      - last_changed
+                      - entity: binary_sensor.motion_bad_helper
+                        lead: "Helper:"
+                  # - type: divider
                   - entity: input_boolean.motion_bad
                     name: Bewegungsmelder aktivieren
-                  - entity: binary_sensor.motion_bad_helper
-                    name: helper
-              - type: custom:fold-entity-row    # wohnzimmer
-                head:  light.wohnzimmer
-                name: Wohnzimmer
+              - type: custom:nmo-row    # wohnzimmer
+                head: 
+                  entity: light.wohnzimmer
+                  name: Wohnzimmer
                 items: 
                   - type: custom:slider-entity-row
                     entity: light.wohnzimmer
                     name: Dimmer
-              - type: custom:fold-entity-row    # michbaeck auto
-                head: light.michbaeck_auto
-                name: AutoDimmer michbaeck
+              - type: custom:nmo-row    # michbaeck auto
+                head: 
+                  entity: light.michbaeck_auto
+                  name: AutoDimmer michbaeck
                 items: 
                   - type: custom:slider-entity-row
                     entity: light.michbaeck_auto
@@ -494,20 +523,38 @@ views:
                   - entity: input_boolean.light_michbaeck_color
                   - entity: input_boolean.light_michbaeck_boost
                     name: Boost Dimmer
-                  - entity: sensor.light_michbaeck_1_target
-                    name: Lux SOLL
-                  - entity: sensor.light_michbaeck_1_pct
-                    name: Lux IST
-                  - entity: sensor.brightness_michbaeck_dimmer
-                    name: Helligkeit Lampen
+                  # - entity: sensor.light_michbaeck_1_target
+                  #   name: Lux SOLL
+                  # - entity: sensor.light_michbaeck_1_pct
+                  #   name: Lux IST
+                  # - entity: sensor.brightness_michbaeck_dimmer
+                  #   name: Helligkeit Lampen
                   - entity: sensor.light_michbaeck_auto
                     name: Dimmer Status
-                  - entity: sensor.light_michbaeck_auto_state
-                    name: Letzte Aktion
+                    infos:
+                      - entity: sensor.light_michbaeck_1_pct
+                        lead: "IST: "
+                        trail: "%"
+                      - entity: sensor.light_michbaeck_1_target
+                        lead: "SOLL: "
+                        trail: "%"
+                      - entity: sensor.brightness_michbaeck_dimmer
+                        lead: "Helligkeit: "
+                        trail: "%"
+                      - entity: light.michbaeck_dimmer
+                        attribute: color_temp
+                        lead: "Farbe: "
+                        trail: " mireds"
+                      - entity: sensor.light_michbaeck_auto_state
+                        lead: "Letzte Aktion: "
+                      # - template: '{{ "IST: " + states("sensor.light_michbaeck_1_pct")|string }}'
+                      # - template: '{{ "SOLL: " + states("sensor.light_michbaeck_1_target")|string }}'
+                      # - template: '{{ "Helligkeit: " + states("sensor.brightness_michbaeck_dimmer")|string + "%"}}'
+                      # - template: '{{ "Farbe: " + state_attr("light.michbaeck_dimmer","color_temp")|string + " mireds"}}'
                 #. group_config:
                 #.   secondary_info: entity-id
                 open: false
-              - type: custom:fold-entity-row    # michbaeck lights
+              - type: custom:nmo-row    # michbaeck lights
                 head: light.michbaeck
                 name: Lampen michbaeck
                 open: false
@@ -517,18 +564,38 @@ views:
                     name: ALLE
                   - type: custom:slider-entity-row
                     entity: light.grosses_licht
+                    infos:
+                      - brightness
+                      - color_temp
                   - type: custom:slider-entity-row
                     entity: light.stehlampe
+                    infos:
+                      - brightness
+                      - color_temp
                   - type: custom:slider-entity-row
                     entity: light.schreibtisch
+                    infos:
+                      - brightness
+                      - color_temp
                   - type: custom:slider-entity-row
                     entity: light.regal
+                    infos:
+                      - brightness
+                      - color_temp
                   - type: custom:slider-entity-row
                     entity: light.ikea
+                    infos:
+                      - brightness
                   - type: custom:slider-entity-row
                     entity: light.bett
+                    infos:
+                      - brightness
+                      - color_temp
                   - type: custom:slider-entity-row
                     entity: light.xiaomi_gateway
+                    infos:
+                      - brightness
+                      - color_temp
           - type: glance
             # title: Motion
             show_state: false
@@ -551,9 +618,11 @@ views:
             entities:
               - entity: sensor.temp_aussen
               - entity: sensor.temp_flur
-              - type: custom:fold-entity-row    # kueche
-                head:  climate.kueche
-                name: Küche
+              - type: divider
+              - type: custom:nmo-row    # kueche
+                head: 
+                  entity: climate.kueche
+                  name: Küche
                 items: 
                   - entity: sensor.temp_kueche
                     name: Temperatur
@@ -566,9 +635,10 @@ views:
                   - entity: variable.climate_kueche_save
                     name: Gespeicherte Temperatur
                     icon: mdi:temperature-celsius
-              - type: custom:fold-entity-row    # bad
-                head:  climate.bad
-                name: Bad
+              - type: custom:nmo-row    # bad
+                head: 
+                  entity: climate.bad
+                  name: Bad
                 items: 
                   - entity: sensor.temp_bad
                     name: Temperatur
@@ -579,9 +649,10 @@ views:
                   - entity: variable.climate_bad_save
                     name: Gespeicherte Temperatur
                     icon: mdi:temperature-celsius
-              - type: custom:fold-entity-row    # michbaeck
-                head:  climate.michbaeck
-                name: michbaeck
+              - type: custom:nmo-row    # michbaeck
+                head: 
+                  entity: climate.michbaeck
+                  name: michbaeck
                 items: 
                   - entity: sensor.temp_michbaeck
                     name: Temperatur
@@ -596,13 +667,20 @@ views:
                   - entity: variable.climate_michbaeck_save
                     name: Gespeicherte Temperatur
                     icon: mdi:temperature-celsius
-              - type: custom:fold-entity-row    # michbaeck AC
-                head:  climate.michbaeck_ac
-                name: michbaeck AC
+              - type: custom:nmo-row    # michbaeck AC
+                head: 
+                  entity: climate.michbaeck_ac
+                  name: michbaeck AC
                 items: 
                   - entity: fan.michbaeck
-              #. - entity: switch.boiler
-              - entity: input_boolean.climate_automatic
+              - type: custom:nmo-row
+                head:
+                  type: section
+                  label: Einstellungen
+                items:
+                  - entity: input_boolean.climate_automatic
+                  - entity: switch.boiler
+                    secondary_info: last-changed
           - type: glance
             # title: Türen & Fenster
             show_state: false
@@ -643,34 +721,55 @@ views:
         type: entities
         show_header_toggle: false
         entities:
-          - type: custom:fold-entity-row    # plant 1
-            head:  sensor.plant_michbaeck_1
+          - type: custom:nmo-row    # plant 1
+            head: 
+              entity: sensor.plant_michbaeck_1
+              name: michbaeck Pflanze 1
+              infos:
+                - template: >
+                    {% if state_attr("automation.plant_1_water", "last_triggered") is not none %}
+                      {{ as_timestamp(state_attr("automation.plant_1_water", "last_triggered"))|timestamp_custom("%A %H:%M") }}
+                    {% endif %}
+                  # attribute: last_triggered
+                  lead: "Zuletzt gegossen:"
             items:
-              - entity: binary_sensor.plant_michbaeck_1_water
-                name: Wassertank
               - entity: automation.plant_1_issue
                 name: Pobleme melden
               - entity: switch.plant_michbaeck_1_power
                 name: Power
               - entity: switch.plant_michbaeck_1_water
                 name: Gießen
+                infos:
+                  - entity: binary_sensor.plant_michbaeck_1_water
+                    lead: "Wassertank: "
               - entity: automation.plant_1_water
                 name: Automatisch gießen
 
-          - type: custom:fold-entity-row    # plant 2
-            head:  sensor.plant_michbaeck_2
+          - type: custom:nmo-row    # plant 2
+            head: 
+              entity: sensor.plant_michbaeck_2
+              name: michbaeck Pflanze 2
+              infos:
+                - template: >
+                    {% if state_attr("automation.plant_2_water", "last_triggered") is not none %}
+                      {{ as_timestamp(state_attr("automation.plant_2_water", "last_triggered"))|timestamp_custom("%A %H:%M") }}
+                    {% endif %}
+                # - entity: automation.plant_2_water
+                #   attribute: last_triggered
+                  lead: "Zuletzt gegossen:"
             items: 
-              - entity: binary_sensor.plant_michbaeck_2_water
-                name: Wassertank
               - entity: automation.plant_2_issue
                 name: Pobleme melden
               - entity: switch.plant_michbaeck_2_power
                 name: Power
               - entity: switch.plant_michbaeck_2_water
                 name: Gießen
+                infos:
+                  - entity: binary_sensor.plant_michbaeck_2_water
+                    lead: "Wassertank: "
               - entity: automation.plant_2_water
                 name: Automatisch gießen
-          - type: custom:fold-entity-row    # settings
+          - type: custom:nmo-row    # settings
             head:  
               type: section
               label: Einstellungen
@@ -690,8 +789,25 @@ views:
         show_header_toggle: false
         entities:
           - entity: switch.computer
-          - entity: switch.drucker
-          - entity: switch.loetkolben
+          - type: custom:nmo-row
+            head:
+              entity: switch.drucker
+              infos:
+                - entity: sensor.drucker_timer
+                  lead: 'SleepTimer: '
+            items:
+              - entity: input_number.drucker_timer
+                name: Stunden
+              - entity: script.drucker_timer
+                name: SleepTimer starten
+          
+          - type: custom:nmo-row
+            head:
+              entity: switch.loetkolben
+              infos:
+                - entity: sensor.solder_timer
+                  lead: 'SleepTimer: '
+                  # trail: ' Minuten'
           - entity: switch.rcswitch3
 
       - id: newdash_settings
@@ -920,8 +1036,7 @@ views:
       - id: sleep_cycle_1
         type: vertical-stack
         cards:
-          - id: sleep_cycle_1_1
-            type: entities
+          - type: entities
             title: Wecker
             show_header_toggle: false
             entities:
@@ -932,22 +1047,6 @@ views:
               - type: custom:nmo-row
                 head:
                   type: section
-                  label: Details
-                items:
-                  - entity: sensor.bed_load
-                    infos:
-                      - entity: sensor.bed_load_raw
-                        lead: "Rohdaten: "
-                  - entity: sensor.bed_load_step
-                  - type: divider
-                  - entity: sensor.sleep_cycle
-                  - entity: sensor.sleep_cycle_lowpass
-                  - type: divider
-                  - entity: sensor.sleep_cycle_ratio
-                  - entity: sensor.sleep_cycle_ratio_lowpass
-              - type: custom:nmo-row
-                head:
-                  type: section
                   label: Einstellungen
                 items:
                   - entity: input_number.bed_load_sensitivity
@@ -955,6 +1054,10 @@ views:
                   - entity: input_number.bed_load_raw_max
                   - entity: input_number.bed_load_ref_weight
                   - entity: input_boolean.asleep
+
+      - id: sleep_cycle_2
+        type: vertical-stack
+        cards:
           - type: gauge
             title: Last
             unit_of_measurement: 'kg'
@@ -963,32 +1066,32 @@ views:
               green: 0
               yellow: 50
               red: 100
-          # - type: custom:nmo-row
-          #   head: sensor.flux
-          #   items:
-          #     - entity: light.stehlampe
-          #       secondary_info: last-changed
-          #       infos:
-          #         - color_temp
-          #         - brightness
-          #         - entity: sun.sun
-          #           attribute: elevation
-          #           lead: "Sun elecation: "
-          #           trail: "°"
-          #         - entity: sensor.light_michbaeck_1
-          #           lead: "Illuminance: "
-          #           trail: " lx"
-          #         - lead: this is just a comment
-          #         - template: '{{ states("sensor.time") }}'
-          #           # lead: "Farbtemperatur "
-          #           # trail: " mireds"
-          #     - entity: sensor.light_aussen
-          #       secondary_info: entity-id
-          #   # group_config:
-          #   #   secondary_info: entity-id
-          #   open: true
+          - type: entities
+            entities:
+              - type: custom:nmo-row
+                head:
+                  type: section
+                  label: Details
+                items:
+                  - entity: sensor.bed_load
+                    infos:
+                      - entity: sensor.bed_load_raw
+                        lead: "Rohdaten: "
+                      - entity: sensor.bed_load_step
+                        lead: "Änderung: "
+                        trail: "g"
+                      - entity: sensor.sleep_cycle
+                        lead: "Bewegung: "
+                      - entity: sensor.sleep_cycle_lowpass
+                        lead: "Bewegung lowpass: "
+                      - entity: sensor.sleep_cycle_ratio
+                        lead: "Schlafphase: "
+                        trail: "%"
+                      - entity: sensor.sleep_cycle_ratio_lowpass
+                        lead: "Schlafphase lowpass: "
+                        trail: "%"
       
-      - id: sleep_cycle_2
+      - id: sleep_cycle_3
         type: vertical-stack
         cards:
           - type: history-graph
@@ -997,12 +1100,20 @@ views:
             refresh_interval: 10
             entities:
               - entity: sensor.bed_load
+      
+      - id: sleep_cycle_4
+        type: vertical-stack
+        cards:
           - type: history-graph
             title: Laständerung
             hours_to_show: 1
             refresh_interval: 10
             entities:
               - entity: sensor.bed_load_step
+
+      - id: sleep_cycle_5
+        type: vertical-stack
+        cards:
           - type: history-graph
             title: Bewegung
             hours_to_show: 1
@@ -1011,6 +1122,10 @@ views:
               - entity: sensor.sleep_cycle
               - entity: sensor.sleep_cycle_lowpass
                 name: Lowpass
+      
+      - id: sleep_cycle_6
+        type: vertical-stack
+        cards:
           - type: history-graph
             title: Phasen
             hours_to_show: 1
@@ -1143,125 +1258,303 @@ views:
         type: entities
         title: ESP nodes
         entities:
-          - entity: sensor.esp01
-          - type: custom:fold-entity-row
-            head:  
-              type: section
-              label: Details
+          - type: custom:nmo-row
+            head: sensor.esp01
             items: 
-              - type: weblink
-                url: http://esp01
-                name: esp01 - Pflanze 1 & RF
-              # - type: custom:entity-attributes-card
-              #   filter:
-              #     include:
-              #       - key: sensor.esp01.uptime
-              #       - key: sensor.esp01.ip
-              #       - key: sensor.esp01.rssi
-              #       - key: sensor.esp01.plugin
-              #       - key: sensor.esp01.last*
-          - entity: sensor.esp02
-          - type: custom:fold-entity-row
-            head:  
-              type: section
-              label: Details
+              - entity: sensor.esp01
+                infos:
+                  - template: >
+                      {{ "<a href=\"http://" + state_attr("sensor.esp01", "ip")|string + "\">configure</a>" }}
+                  - entity: sensor.esp01
+                    attribute: uptime
+                    lead: "Uptime: "
+                  - entity: sensor.esp01
+                    attribute: ip
+                    lead: "IP: "
+                  - entity: sensor.esp01
+                    attribute: RSSI
+                    lead: "WLAN: "
+                    trail: " db"
+                  - entity: sensor.esp01
+                    attribute: plugin
+                    lead: "Plugin version: "
+                  - last_disconnect
+                  - last_boot_cause
+              - type: custom:nmo-row
+                head:
+                  type: section
+                  label: Sensoren/Geräte
+                items: 
+                  - switch.drucker
+                  - switch.loetkolben
+                  - switch.rcswitch3
+                  - sensor.light_michbaeck_4
+
+          - type: custom:nmo-row
+            head: sensor.esp02
             items: 
-              - type: weblink
-                url: http://esp02
-                name: esp02 - Aussen
-              # - type: custom:entity-attributes-card
-              #   filter:
-              #     include:
-              #       - key: sensor.esp02.uptime
-              #       - key: sensor.esp02.ip
-              #       - key: sensor.esp02.rssi
-              #       - key: sensor.esp02.plugin
-              #       - key: sensor.esp02.last*
-          - entity: sensor.esp04
-          - type: custom:fold-entity-row
-            head:  
-              type: section
-              label: Details
+              - entity: sensor.esp02
+                infos:
+                  - template: >
+                      {{ "<a href=\"http://" + state_attr("sensor.esp02", "ip")|string + "\">configure</a>" }}
+                  - entity: sensor.esp02
+                    attribute: uptime
+                    lead: "Uptime: "
+                  - entity: sensor.esp02
+                    attribute: ip
+                    lead: "IP: "
+                  - entity: sensor.esp02
+                    attribute: RSSI
+                    lead: "WLAN: "
+                    trail: " db"
+                  - entity: sensor.esp02
+                    attribute: plugin
+                    lead: "Plugin version: "
+                  - last_disconnect
+                  - last_boot_cause
+              - type: custom:nmo-row
+                head:
+                  type: section
+                  label: Sensoren/Geräte
+                items: 
+                  - sensor.light_aussen
+                  - sensor.temp_aussen
+
+          - type: custom:nmo-row
+            head: sensor.esp04
             items: 
-              - type: weblink
-                url: http://esp04
-                name: esp04 - michbaeck Thermostat
-              # - type: custom:entity-attributes-card
-              #   filter:
-              #     include:
-              #       - key: sensor.esp04.uptime
-              #       - key: sensor.esp04.ip
-              #       - key: sensor.esp04.rssi
-              #       - key: sensor.esp04.plugin
-              #       - key: sensor.esp04.last*
-          - entity: sensor.esp05
-          - type: custom:fold-entity-row
-            head:  
-              type: section
-              label: Details
+              - entity: sensor.esp04
+                infos:
+                  - template: >
+                      {{ "<a href=\"http://" + state_attr("sensor.esp04", "ip")|string + "\">configure</a>" }}
+                  - entity: sensor.esp04
+                    attribute: uptime
+                    lead: "Uptime: "
+                  - entity: sensor.esp04
+                    attribute: ip
+                    lead: "IP: "
+                  - entity: sensor.esp04
+                    attribute: RSSI
+                    lead: "WLAN: "
+                    trail: " db"
+                  - entity: sensor.esp04
+                    attribute: plugin
+                    lead: "Plugin version: "
+                  - last_disconnect
+                  - last_boot_cause
+              - type: custom:nmo-row
+                head:
+                  type: section
+                  label: Sensoren/Geräte
+                items: 
+                  - sensor.light_michbaeck_3
+                  - binary_sensor.motion_michbaeck_1
+
+          - type: custom:nmo-row
+            head: sensor.esp05
             items: 
-              - type: weblink
-                url: http://esp05
-                name: esp05 - Bad Sensoren
-              # - type: custom:entity-attributes-card
-              #   filter:
-              #     include:
-              #       - key: sensor.esp05.uptime
-              #       - key: sensor.esp05.ip
-              #       - key: sensor.esp05.rssi
-              #       - key: sensor.esp05.plugin
-              #       - key: sensor.esp05.last*
-          - entity: sensor.esp07
-          - type: custom:fold-entity-row
-            head:  
-              type: section
-              label: Details
+              - entity: sensor.esp05
+                infos:
+                  - template: >
+                      {{ "<a href=\"http://" + state_attr("sensor.esp05", "ip")|string + "\">configure</a>" }}
+                  - entity: sensor.esp05
+                    attribute: uptime
+                    lead: "Uptime: "
+                  - entity: sensor.esp05
+                    attribute: ip
+                    lead: "IP: "
+                  - entity: sensor.esp05
+                    attribute: RSSI
+                    lead: "WLAN: "
+                    trail: " db"
+                  - entity: sensor.esp05
+                    attribute: plugin
+                    lead: "Plugin version: "
+                  - last_disconnect
+                  - last_boot_cause
+              - type: custom:nmo-row
+                head:
+                  type: section
+                  label: Sensoren/Geräte
+                items: 
+                  - sensor.light_bad
+                  - sensor.temp_bad
+                  - binary_sensor.motion_bad
+
+          - type: custom:nmo-row
+            head: sensor.esp07
             items: 
-              - type: weblink
-                url: http://esp07
-                name: esp07 - Ventilator
-              # - type: custom:entity-attributes-card
-              #   filter:
-              #     include:
-              #       - key: sensor.esp07.uptime
-              #       - key: sensor.esp07.ip
-              #       - key: sensor.esp07.rssi
-              #       - key: sensor.esp07.plugin
-              #       - key: sensor.esp07.last*
-          - entity: sensor.esp10
-          - type: custom:fold-entity-row
-            head:  
-              type: section
-              label: Details
+              - entity: sensor.esp07
+                infos:
+                  - template: >
+                      {{ "<a href=\"http://" + state_attr("sensor.esp07", "ip")|string + "\">configure</a>" }}
+                  - entity: sensor.esp07
+                    attribute: uptime
+                    lead: "Uptime: "
+                  - entity: sensor.esp07
+                    attribute: ip
+                    lead: "IP: "
+                  - entity: sensor.esp07
+                    attribute: RSSI
+                    lead: "WLAN: "
+                    trail: " db"
+                  - entity: sensor.esp07
+                    attribute: plugin
+                    lead: "Plugin version: "
+                  - last_disconnect
+                  - last_boot_cause
+              - type: custom:nmo-row
+                head:
+                  type: section
+                  label: Sensoren/Geräte
+                items: 
+                  - binary_sensor.ceilingswitch
+                  - fan.michbaeck
+
+          # - type: custom:nmo-row
+            # head: sensor.esp09
+            # items: 
+            #   - entity: sensor.esp09
+            #     infos:
+            #       - template: >
+            #           {{ "<a href=\"http://" + state_attr("sensor.esp09", "ip")|string + "\">configure</a>" }}
+            #       - entity: sensor.esp09
+            #         attribute: uptime
+            #         lead: "Uptime: "
+            #       - entity: sensor.esp09
+            #         attribute: ip
+            #         lead: "IP: "
+            #       - entity: sensor.esp09
+            #         attribute: RSSI
+            #         lead: "WLAN: "
+            #         trail: " db"
+            #       - entity: sensor.esp09
+            #         attribute: plugin
+            #         lead: "Plugin version: "
+            #       - last_disconnect
+            #       - last_boot_cause
+          - type: custom:nmo-row
+            head: sensor.esp10
             items: 
-              - type: weblink
-                url: http://esp10
-                name: esp10 - michbaeck Fenster 2
-              # - type: custom:entity-attributes-card
-              #   filter:
-              #     include:
-              #       - key: sensor.esp10.uptime
-              #       - key: sensor.esp10.ip
-              #       - key: sensor.esp10.rssi
-              #       - key: sensor.esp10.plugin
-              #       - key: sensor.esp10.last*
-          - entity: sensor.esp11
-          - type: custom:fold-entity-row
-            head:  
-              type: section
-              label: Details
+              - entity: sensor.esp10
+                infos:
+                  - template: >
+                      {{ "<a href=\"http://" + state_attr("sensor.esp10", "ip")|string + "\">configure</a>" }}
+                  - entity: sensor.esp10
+                    attribute: uptime
+                    lead: "Uptime: "
+                  - entity: sensor.esp10
+                    attribute: ip
+                    lead: "IP: "
+                  - entity: sensor.esp10
+                    attribute: RSSI
+                    lead: "WLAN: "
+                    trail: " db"
+                  - entity: sensor.esp10
+                    attribute: plugin
+                    lead: "Plugin version: "
+                  - last_disconnect
+                  - last_boot_cause
+              - type: custom:nmo-row
+                head:
+                  type: section
+                  label: Sensoren/Geräte
+                items: 
+                  - sensor.plant_michbaeck_2
+                  - sensor.light_michbaeck_2
+                  - binary_sensor.plant_michbaeck_2_water
+                  - switch.plant_michbaeck_2_water
+                  - switch.plant_michbaeck_2_power
+
+          - type: custom:nmo-row
+            head: sensor.esp11
             items: 
-              - type: weblink
-                url: http://esp11
-                name: esp11 - Bett
-              # - type: custom:entity-attributes-card
-              #   filter:
-              #     include:
-              #       - key: sensor.esp11.uptime
-              #       - key: sensor.esp11.ip
-              #       - key: sensor.esp11.rssi
-              #       - key: sensor.esp11.plugin
-              #       - key: sensor.esp11.last*
+              - entity: sensor.esp11
+                infos:
+                  - template: >
+                      {{ "<a href=\"http://" + state_attr("sensor.esp11", "ip")|string + "\">configure</a>" }}
+                  - entity: sensor.esp11
+                    attribute: uptime
+                    lead: "Uptime: "
+                  - entity: sensor.esp11
+                    attribute: ip
+                    lead: "IP: "
+                  - entity: sensor.esp11
+                    attribute: RSSI
+                    lead: "WLAN: "
+                    trail: " db"
+                  - entity: sensor.esp11
+                    attribute: plugin
+                    lead: "Plugin version: "
+                  - last_disconnect
+                  - last_boot_cause
+              - type: custom:nmo-row
+                head:
+                  type: section
+                  label: Sensoren/Geräte
+                items: 
+                  - sensor.bed_load_raw
+                  - sensor.temp_michbaeck
+          - type: custom:nmo-row
+            head: sensor.esp20
+            items: 
+              - entity: sensor.esp20
+                infos:
+                  - template: >
+                      {{ "<a href=\"http://" + state_attr("sensor.esp20", "ip")|string + "\">configure</a>" }}
+                  - entity: sensor.esp20
+                    attribute: uptime
+                    lead: "Uptime: "
+                  - entity: sensor.esp20
+                    attribute: ip
+                    lead: "IP: "
+                  - entity: sensor.esp20
+                    attribute: RSSI
+                    lead: "WLAN: "
+                    trail: " db"
+                  - entity: sensor.esp20
+                    attribute: plugin
+                    lead: "Plugin version: "
+                  - last_disconnect
+                  - last_boot_cause
+              - type: custom:nmo-row
+                head:
+                  type: section
+                  label: Sensoren/Geräte
+                items: 
+                  - sensor.plant_michbaeck_1
+                  - binary_sensor.plant_michbaeck_1_water
+                  - switch.plant_michbaeck_1_water
+                  - switch.plant_michbaeck_1_power
+                  - sensor.lux_michbaeck_1
+          - type: custom:nmo-row
+            head: sensor.esp22
+            items: 
+              - entity: sensor.esp22
+                infos:
+                  - template: >
+                      {{ "<a href=\"http://" + state_attr("sensor.esp22", "ip")|string + "\">configure</a>" }}
+                  - entity: sensor.esp22
+                    attribute: uptime
+                    lead: "Uptime: "
+                  - entity: sensor.esp22
+                    attribute: ip
+                    lead: "IP: "
+                  - entity: sensor.esp22
+                    attribute: RSSI
+                    lead: "WLAN: "
+                    trail: " db"
+                  - entity: sensor.esp22
+                    attribute: plugin
+                    lead: "Plugin version: "
+                  - last_disconnect
+                  - last_boot_cause
+              - type: custom:nmo-row
+                head:
+                  type: section
+                  label: Sensoren/Geräte
+                items: 
+                  - switch.boiler
           - type: weblink
             url: http://esp50
             name: sonofftouch01 - Bad Licht
@@ -1374,7 +1667,7 @@ views:
         type: entities
         title: All Inputs
         entities:
-          - type: custom:fold-entity-row
+          - type: custom:nmo-row
             head:
               type: section
               label: Boolean
@@ -1400,7 +1693,7 @@ views:
               - entity: input_boolean.view_options
               - entity: input_boolean.wecker_toggle
           # - id: input_select_fold
-          - type: custom:fold-entity-row
+          - type: custom:nmo-row
             head:
               type: section
               label: Select
@@ -1415,7 +1708,7 @@ views:
               - entity: input_select.spotify_source
               - entity: input_select.theme
           # - id: input_number_fold
-          - type: custom:fold-entity-row
+          - type: custom:nmo-row
             head:
               type: section
               label: Number
@@ -1441,7 +1734,7 @@ views:
               - entity: input_number.ticker_fx
               - entity: input_number.wecker_fading
           # - id: input_datetime_fold
-          - type: custom:fold-entity-row
+          - type: custom:nmo-row
             head:
               type: section
               label: DateTime
@@ -1450,8 +1743,22 @@ views:
             items:
               - entity: input_datetime.alarm
               - entity: input_datetime.leave_home
+              - entity: input_datetime.climate_1_start
+              - entity: input_datetime.climate_1_end
+              - entity: input_datetime.climate_2_start
+              - entity: input_datetime.climate_2_end
+              - entity: input_datetime.climate_3_start
+              - entity: input_datetime.climate_3_end
+              - entity: input_datetime.climate_4_start
+              - entity: input_datetime.climate_4_end
+              - entity: input_datetime.climate_5_start
+              - entity: input_datetime.climate_5_end
+              - entity: input_datetime.climate_6_start
+              - entity: input_datetime.climate_6_end
+              - entity: input_datetime.climate_7_start
+              - entity: input_datetime.climate_7_end
           # - id: input_text_fold
-          - type: custom:fold-entity-row
+          - type: custom:nmo-row
             head:
               type: section
               label: Text
@@ -1541,6 +1848,10 @@ views:
       - input_boolean.view_details
       - input_boolean.view_debug
     cards:
+      # - type: iframe
+      #   id: dev_12
+      #   url: https://materialdesignicons.com/
+      #   aspect_ratio: 100%
       # - id: dev_not_my_own_1
         # type: custom:not-my-own-card
         # entity: sensor.bed_load_step
@@ -1603,14 +1914,14 @@ views:
         #!   width: 50px
         #!   height: 50px
 
-      #[x] FOLD-ENTITY-ROW # SLIDER-ENTIITY-ROW    
+      #[x] nmo-row # SLIDER-ENTIITY-ROW    
       #[todo] try to get attributes; fold-in-fold
       - id: dev_6
-        title: FOLD-ENTITY-ROW
+        title: nmo-row
         type: entities
         show_header_toggle: false
         entities:
-          # - type: custom:fold-entity-row
+          # - type: custom:nmo-row
           #   head:  light.michbaeck_auto
           #   name: michbaeck AutoDimmer
           #   items: 
@@ -1628,13 +1939,31 @@ views:
           #   group_config:
           #     secondary_info: entity-id
           #   open: false
-          - type: custom:fold-entity-row
+          - type: custom:nmo-row
             head: light.michbaeck
             name: michbaeck
             open: false
             items:
               - entity: light.grosses_licht
-              # - type: custom:fold-entity-row
+                infos:
+                  - template: '{{ states("light.grosses_licht") }}'
+                  - template: '{{ "RGB: " + state_attr("light.grosses_licht", "rgb_color")|string }}'
+                  - template: RGB '{{ state_attr("light.grosses_licht", "rgb_color") }}' RGB
+                  - template: >
+                      {{ "multiline template1" }}
+                      {{ "multiline template2" }}
+                  - template: >
+                      {% if is_state("input_boolean.view_details", "on") %}
+                        Details aktiviert
+                      {% endif %}
+                  - template: >
+                      {% if is_state("input_boolean.view_details", "on") %}
+                        Details aktiviert
+                      {% else %}
+                        Details deaktiviert
+                      {% endif %}
+                  
+              # - type: custom:nmo-row
                 # head: light.stehlampe
                 # name: Stehlampe
                 # open: false
@@ -1658,12 +1987,12 @@ views:
                   - entity: sensor.light_michbaeck_1
                     lead: "Illuminance: "
                     trail: " lx"
-                  - lead: '1 {{ states("sensor.time") }}'
-                  - template: '{{ states("sensor.time") }}'
-                  - lead: "2 {{ states('sensor.time') }}"
-                  - template: "{{ states('sensor.time') }}"
-                  - lead: "3 test"
-                  - template: "3 test"
+                  # - lead: '1 {{ states("sensor.time") }}'
+                  # - template: '{{ states("sensor.time") }}'
+                  # - lead: "2 {{ states('sensor.time') }}"
+                  # - template: "{{ states('sensor.time') }}"
+                  # - lead: "3 test"
+                  # - template: "3 test"
                     # lead: "Farbtemperatur "
                     # trail: " mireds"
               - entity: sensor.light_aussen
@@ -1672,7 +2001,7 @@ views:
             #   secondary_info: entity-id
             open: true
 
-          - type: custom:fold-entity-row
+          - type: custom:nmo-row
             head:
               type: section
               label: section
@@ -1842,4 +2171,34 @@ views:
         # line_color_below: "var(--dark-primary-color)"
         # hide_icon: false
 
+#-------------------------------------
+#* DEV2
+  - id: panel_icons
+    title: IconDB
+    panel: true
+    # icon: mdi:3d-printer
+    cards:
+      - type: iframe
+        url: https://materialdesignicons.com/
 
+#-------------------------------------
+#* DEV2
+  - id: panel_cad
+    title: TinkerCAD
+    panel: true
+    icon: mdi:3d-printer
+    cards:
+      - type: iframe
+        url: https://www.tinkercad.com
+        # aspect_ratio: 75%
+
+#-------------------------------------
+# #* ICLOUD
+#   - id: icloud_panel
+#     title: icloud
+#     panel: true
+#     icon: apple-icloud
+#     cards:
+#       - type: iframe
+#         url: https://www.icloud.com
+#         # aspect_ratio: 75%

@@ -1,3 +1,14 @@
+# esp19
+D1:   Limit1
+D2:   Limit2
+D5:   INA
+D6:   INB
+D7:   PWM
+3V:   +5V--EN--
+D0:   LED
+D8:   Button
+
+
 # esp20
 04:   i2c
 05:   i2c
