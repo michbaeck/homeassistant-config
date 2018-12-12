@@ -157,6 +157,9 @@ title: Home
 
 # Include external resources
 resources:
+  - url: /local/custom-lovelace/value-only-card.js?v=0.0.1
+    type: js
+
   - url: /local/custom-lovelace/nmo-row.js?v=0.0.1
     type: js
 
@@ -350,6 +353,8 @@ resources:
 
 excluded_entities:
   - input_number.ticker_fx
+  - media_player.this_device
+  - media_player.michaels_alexa_apps
 
 views:
 #-----------------------------------------------------------------------------#
@@ -359,6 +364,8 @@ views:
     title: Dashboard
     icon: mdi:home-circle
     badges:
+      - sensor.time
+      - sensor.wetter_symbol
       - input_boolean.view_options
       - input_boolean.view_details
       - input_boolean.view_debug
@@ -367,12 +374,14 @@ views:
         type: vertical-stack
         cards:
           - id: newdash_ticker
-            type: picture-entity
-            show_name: false
-            show_state: true
+            type: custom:value-only-card
             entity: sensor.ticker
-            image: /local/pics/darkgrey.png
-            aspect_ratio: 5x1
+            # type: picture-entity
+            # show_name: false
+            # show_state: true
+            # entity: sensor.ticker
+            # image: /local/pics/darkgrey.png
+            # aspect_ratio: 5x1
             
           - id: newdash_presence
             type: entities
@@ -382,6 +391,7 @@ views:
               - type: custom:nmo-row
                 head: 
                   entity: sensor.michbaeck
+                  secondary_info: last-changed
                   infos:
                     - entity: sensor.daily_routine
                 open: false
@@ -414,7 +424,9 @@ views:
                     #         {{ "Zuletzt: " + states.script.bedtime_actions.attributes.last_triggered|string }}
                     #       {% endif %}
               - type: custom:nmo-row
-                head: binary_sensor.johannes
+                head: 
+                  entity: binary_sensor.johannes
+                  secondary_info: last-changed
                 open: false
                 group_config:
                   secondary_info: last-changed
@@ -442,11 +454,22 @@ views:
               - type: custom:nmo-row    # flux
                 head: 
                   entity: sensor.flux
-                  infos:
-                    - entity: sensor.sun_elevation
-                      lead: "Sonnenstand:"
-                      trail: "°"
+                  icon_color: mired
+                  # infos:
+                  #   - entity: sensor.sun_elevation
+                  #     lead: "Sonnenstand:"
+                  #     trail: "°"
                 items: 
+                  - entity: sensor.flux_raw
+                    icon_color: mired
+                    infos:
+                      - lead: "Sonnenstand: "
+                        template: >-
+                          {{ states("sensor.sun_elevation")|int|string + "°" }}
+                      - lead: "Einfluss Tageslicht: "
+                        template: >-
+                          {{ (100 - states("sensor.lux_aussen_pct")|default(100)|int)|int/2 }}
+
                   - entity: input_number.flux_adjust
               - type: custom:nmo-row    # kueche
                 head: 
@@ -535,16 +558,20 @@ views:
                       - entity: sensor.light_michbaeck_1_pct
                         lead: "IST: "
                         trail: "%"
+                        icon_color: lux
                       - entity: sensor.light_michbaeck_1_target
                         lead: "SOLL: "
                         trail: "%"
+                        icon_color: lux
                       - entity: sensor.brightness_michbaeck_dimmer
                         lead: "Helligkeit: "
                         trail: "%"
+                        icon_color: lux
                       - entity: light.michbaeck_dimmer
                         attribute: color_temp
                         lead: "Farbe: "
                         trail: " mireds"
+                        icon_color: mired
                       - entity: sensor.light_michbaeck_auto_state
                         lead: "Letzte Aktion: "
                       # - template: '{{ "IST: " + states("sensor.light_michbaeck_1_pct")|string }}'
@@ -555,8 +582,9 @@ views:
                 #.   secondary_info: entity-id
                 open: false
               - type: custom:nmo-row    # michbaeck lights
-                head: light.michbaeck
-                name: Lampen michbaeck
+                head: 
+                  entity: light.michbaeck
+                  name: Lampen michbaeck
                 open: false
                 items:
                   - type: custom:slider-entity-row
@@ -616,32 +644,44 @@ views:
             type: entities
             show_header_toggle: false
             entities:
-              - entity: sensor.temp_aussen
-              - entity: sensor.temp_flur
+              - type: custom:nmo-row
+                head:
+                  entity: sensor.temp_aussen
+                  icon_color: temp
+              - type: custom:nmo-row
+                head:
+                  entity: sensor.temp_flur
+                  icon_color: temp
               - type: divider
               - type: custom:nmo-row    # kueche
                 head: 
                   entity: climate.kueche
                   name: Küche
+                  icon_color: climate
                 items: 
                   - entity: sensor.temp_kueche
                     name: Temperatur
+                    icon_color: temp
                   - entity: sensor.humidity_kueche
                     name: Luftfeuchtigkeit
                   - entity: binary_sensor.window_kueche
                     name: Fenster
+                    icon_color: window
                   - entity: switch.climate_kueche
                     name: Radiator
                   - entity: variable.climate_kueche_save
                     name: Gespeicherte Temperatur
                     icon: mdi:temperature-celsius
+                    icon_color: temp
               - type: custom:nmo-row    # bad
                 head: 
                   entity: climate.bad
                   name: Bad
+                  icon_color: climate
                 items: 
                   - entity: sensor.temp_bad
                     name: Temperatur
+                    icon_color: temp
                   - entity: binary_sensor.window_bad
                     name: Fenster
                   - entity: switch.climate_bad
@@ -649,28 +689,44 @@ views:
                   - entity: variable.climate_bad_save
                     name: Gespeicherte Temperatur
                     icon: mdi:temperature-celsius
+                    icon_color: temp
               - type: custom:nmo-row    # michbaeck
                 head: 
                   entity: climate.michbaeck
                   name: michbaeck
+                  icon_color: climate
+                  infos:
+                    - template: >-
+                        {% if not is_state("variable.climate_michbaeck_state", "on") %}
+                          {{ states("variable.climate_michbaeck_state")|replace("unknown","Status unbekannt") }}
+                        {% endif %}
                 items: 
                   - entity: sensor.temp_michbaeck
                     name: Temperatur
+                    icon_color: temp
                   - entity: binary_sensor.door_michbaeck
                     name: Tür
+                    icon: mdi:door
                   - entity: binary_sensor.window_michbaeck_1
                     name: Fenster 1
+                    icon_color: window
+                  - entity: cover.window_michbaeck_1
+                    name: Fenster 1
+                    icon_color: window
                   - entity: binary_sensor.window_michbaeck_2
                     name: Fenster 2
+                    icon_color: window
                   - entity: switch.climate_michbaeck
                     name: Radiator
                   - entity: variable.climate_michbaeck_save
                     name: Gespeicherte Temperatur
                     icon: mdi:temperature-celsius
+                    icon_color: temp
               - type: custom:nmo-row    # michbaeck AC
                 head: 
                   entity: climate.michbaeck_ac
                   name: michbaeck AC
+                  icon_color: climate
                 items: 
                   - entity: fan.michbaeck
               - type: custom:nmo-row
@@ -681,6 +737,13 @@ views:
                   - entity: input_boolean.climate_automatic
                   - entity: switch.boiler
                     secondary_info: last-changed
+                    infos:
+                      - entity: binary_sensor.climate_home
+                        lead: "Helper: "
+                      - template: >-
+                          {% if not is_state("variable.climate_home_state", "on") %}
+                            {{ states("variable.climate_home_state")|replace("unknown","Status unbekannt") }}
+                          {% endif %}
           - type: glance
             # title: Türen & Fenster
             show_state: false
@@ -722,53 +785,59 @@ views:
         show_header_toggle: false
         entities:
           - type: custom:nmo-row    # plant 1
+            group_config:
+              secondary_info: last-changed
             head: 
               entity: sensor.plant_michbaeck_1
+              secondary_info: last-changed
               name: michbaeck Pflanze 1
+              icon_color: plant
               infos:
                 - template: >
-                    {% if state_attr("automation.plant_1_water", "last_triggered") is not none %}
-                      {{ as_timestamp(state_attr("automation.plant_1_water", "last_triggered"))|timestamp_custom("%A %H:%M") }}
+                    {% if state_attr("automation.plant_water", "last_triggered") is not none %}
+                      {{ as_timestamp(state_attr("automation.plant_water", "last_triggered"))|timestamp_custom("%A %H:%M") }}
                     {% endif %}
                   # attribute: last_triggered
                   lead: "Zuletzt gegossen:"
             items:
-              - entity: automation.plant_1_issue
-                name: Pobleme melden
               - entity: switch.plant_michbaeck_1_power
                 name: Power
+                infos:
+                  - last_triggered
               - entity: switch.plant_michbaeck_1_water
                 name: Gießen
                 infos:
+                  - last_triggered
                   - entity: binary_sensor.plant_michbaeck_1_water
                     lead: "Wassertank: "
-              - entity: automation.plant_1_water
-                name: Automatisch gießen
 
           - type: custom:nmo-row    # plant 2
+            group_config:
+              secondary_info: last-changed
             head: 
               entity: sensor.plant_michbaeck_2
+              secondary_info: last-changed
               name: michbaeck Pflanze 2
+              icon_color: plant
               infos:
                 - template: >
-                    {% if state_attr("automation.plant_2_water", "last_triggered") is not none %}
-                      {{ as_timestamp(state_attr("automation.plant_2_water", "last_triggered"))|timestamp_custom("%A %H:%M") }}
+                    {% if state_attr("automation.plant_water", "last_triggered") is not none %}
+                      {{ as_timestamp(state_attr("automation.plant_water", "last_triggered"))|timestamp_custom("%A %H:%M") }}
                     {% endif %}
                 # - entity: automation.plant_2_water
                 #   attribute: last_triggered
                   lead: "Zuletzt gegossen:"
             items: 
-              - entity: automation.plant_2_issue
-                name: Pobleme melden
               - entity: switch.plant_michbaeck_2_power
                 name: Power
+                infos:
+                  - last_triggered
               - entity: switch.plant_michbaeck_2_water
                 name: Gießen
                 infos:
+                  - last_triggered
                   - entity: binary_sensor.plant_michbaeck_2_water
                     lead: "Wassertank: "
-              - entity: automation.plant_2_water
-                name: Automatisch gießen
           - type: custom:nmo-row    # settings
             head:  
               type: section
@@ -776,12 +845,24 @@ views:
             items: 
               - entity: script.plant_update
                 name: Jetzt aktualisieren
+                infos:
+                  - last_triggered
               - entity: script.plant_update_voice
                 name: Aktualisieren (Alexa)
-              #. - entity: automation.plant_1_water
-                #. name: Automatisch gießen
+                infos:
+                  - last_triggered
+              - entity: automation.plant_water
+                name: Automatisch gießen
+                infos:
+                  - last_triggered
+              - entity: automation.plant_issue
+                name: Pobleme melden
+                infos:
+                  - last_triggered
               - entity: automation.plant_water_empty
                 name: Leere Tanks melden
+                infos:
+                  - last_triggered
 
       - id: newdash_devices
         type: entities
@@ -789,9 +870,11 @@ views:
         show_header_toggle: false
         entities:
           - entity: switch.computer
+            secondary_info: last-changed
           - type: custom:nmo-row
             head:
               entity: switch.drucker
+              # secondary_info: last-changed
               infos:
                 - entity: sensor.drucker_timer
                   lead: 'SleepTimer: '
@@ -804,11 +887,13 @@ views:
           - type: custom:nmo-row
             head:
               entity: switch.loetkolben
+              # secondary_info: last-changed
               infos:
                 - entity: sensor.solder_timer
                   lead: 'SleepTimer: '
                   # trail: ' Minuten'
           - entity: switch.rcswitch3
+            secondary_info: last-changed
 
       - id: newdash_settings
         title: QuickSettings
@@ -1163,11 +1248,11 @@ views:
 
       - id: media_2
         type: media-control
-        entity: media_player.stereopaar
+        entity: media_player.alexa_stereopaar
 
       - id: media_3
         type: media-control
-        entity: media_player.uberall
+        entity: media_player.alexa_ueberall
 
       - id: media_4
         type: entities
@@ -1175,6 +1260,7 @@ views:
         entities:
           - entity: input_select.alexa_device
           - entity: input_select.alexa_content
+          - entity: input_select.alexa_content_provider
           - entity: script.alexa_play
           - entity: input_number.alexa_volume
           - entity: script.alexa_volume
@@ -1216,15 +1302,28 @@ views:
             entity: sensor.vpn_disconnects
             graph: none
           - type: entities
-            title: ESP disconnects
+            # title: ESP disconnects
             entities:
-              - sensor.esp01_disconnects
-              - sensor.esp02_disconnects
-              - sensor.esp04_disconnects
-              - sensor.esp05_disconnects
-              - sensor.esp07_disconnects
-              - sensor.esp10_disconnects
-              - sensor.esp11_disconnects
+              - type: custom:nmo-row
+                head:
+                  type: section
+                  label: ESP disconnects
+                items:
+                  - sensor.esp01_disconnects
+                  - sensor.esp02_disconnects
+                  - sensor.esp04_disconnects
+                  - sensor.esp05_disconnects
+                  - sensor.esp07_disconnects
+                  - sensor.esp10_disconnects
+                  - sensor.esp11_disconnects
+              - type: custom:nmo-row
+                head:
+                  type: section
+                  label: ESP Recovery
+                items:
+                  - entity: input_number.esp_unit
+                  - entity: script.esp_recovery_mqtt
+                  - entity: script.esp_recovery_http
           - type: markdown
             #.title: Debugging
             content: >
@@ -1234,17 +1333,27 @@ views:
               e.g. [ **script\\.|light\\.** ] will log all services starting with either "script." or "light.".
               Apply patterns **carefully** and enable debug_log below.
           - type: entities
-            title: Regex Strings
+            # title: Regex Strings
             show_header_toggle: false
             entities:
-              - entity: input_text.debug_states_include
-              - entity: input_text.debug_states_exclude
-              - entity: input_boolean.debug_states
-              - entity: input_boolean.debug_attributes
-              - type: divider
-              - entity: input_text.debug_services_include
-              - entity: input_text.debug_services_exclude
-              - entity: input_boolean.debug_services
+              - type: custom:nmo-row
+                head:
+                  type: section
+                  label: Debug states
+                items:
+                  - entity: input_text.debug_states_include
+                  - entity: input_text.debug_states_exclude
+                  - entity: input_boolean.debug_states
+                  - entity: input_boolean.debug_attributes
+              # - type: divider
+              - type: custom:nmo-row
+                head:
+                  type: section
+                  label: Debug services
+                items:
+                  - entity: input_text.debug_services_include
+                  - entity: input_text.debug_services_exclude
+                  - entity: input_boolean.debug_services
 
       - id: system_2
         type: custom:monster-card
@@ -1275,6 +1384,7 @@ views:
                     attribute: RSSI
                     lead: "WLAN: "
                     trail: " db"
+                    icon_color: wlan
                   - entity: sensor.esp01
                     attribute: plugin
                     lead: "Plugin version: "
@@ -1290,6 +1400,7 @@ views:
                   - switch.rcswitch3
                   - sensor.light_michbaeck_4
 
+          - type: divider
           - type: custom:nmo-row
             head: sensor.esp02
             items: 
@@ -1307,6 +1418,7 @@ views:
                     attribute: RSSI
                     lead: "WLAN: "
                     trail: " db"
+                    icon_color: wlan
                   - entity: sensor.esp02
                     attribute: plugin
                     lead: "Plugin version: "
@@ -1318,8 +1430,10 @@ views:
                   label: Sensoren/Geräte
                 items: 
                   - sensor.light_aussen
-                  - sensor.temp_aussen
+                  - entity: sensor.temp_aussen
+                    icon_color: temp
 
+          - type: divider
           - type: custom:nmo-row
             head: sensor.esp04
             items: 
@@ -1337,6 +1451,7 @@ views:
                     attribute: RSSI
                     lead: "WLAN: "
                     trail: " db"
+                    icon_color: wlan
                   - entity: sensor.esp04
                     attribute: plugin
                     lead: "Plugin version: "
@@ -1350,6 +1465,7 @@ views:
                   - sensor.light_michbaeck_3
                   - binary_sensor.motion_michbaeck_1
 
+          - type: divider
           - type: custom:nmo-row
             head: sensor.esp05
             items: 
@@ -1367,6 +1483,7 @@ views:
                     attribute: RSSI
                     lead: "WLAN: "
                     trail: " db"
+                    icon_color: wlan
                   - entity: sensor.esp05
                     attribute: plugin
                     lead: "Plugin version: "
@@ -1378,9 +1495,11 @@ views:
                   label: Sensoren/Geräte
                 items: 
                   - sensor.light_bad
-                  - sensor.temp_bad
+                  - entity: sensor.temp_bad
+                    icon_color: temp
                   - binary_sensor.motion_bad
 
+          - type: divider
           - type: custom:nmo-row
             head: sensor.esp07
             items: 
@@ -1398,6 +1517,7 @@ views:
                     attribute: RSSI
                     lead: "WLAN: "
                     trail: " db"
+                    icon_color: wlan
                   - entity: sensor.esp07
                     attribute: plugin
                     lead: "Plugin version: "
@@ -1433,6 +1553,8 @@ views:
             #         lead: "Plugin version: "
             #       - last_disconnect
             #       - last_boot_cause
+
+          - type: divider
           - type: custom:nmo-row
             head: sensor.esp10
             items: 
@@ -1450,6 +1572,7 @@ views:
                     attribute: RSSI
                     lead: "WLAN: "
                     trail: " db"
+                    icon_color: wlan
                   - entity: sensor.esp10
                     attribute: plugin
                     lead: "Plugin version: "
@@ -1460,12 +1583,14 @@ views:
                   type: section
                   label: Sensoren/Geräte
                 items: 
-                  - sensor.plant_michbaeck_2
+                  - entity: sensor.plant_michbaeck_2
+                    icon_color: plant
                   - sensor.light_michbaeck_2
                   - binary_sensor.plant_michbaeck_2_water
                   - switch.plant_michbaeck_2_water
                   - switch.plant_michbaeck_2_power
 
+          - type: divider
           - type: custom:nmo-row
             head: sensor.esp11
             items: 
@@ -1483,6 +1608,7 @@ views:
                     attribute: RSSI
                     lead: "WLAN: "
                     trail: " db"
+                    icon_color: wlan
                   - entity: sensor.esp11
                     attribute: plugin
                     lead: "Plugin version: "
@@ -1494,7 +1620,10 @@ views:
                   label: Sensoren/Geräte
                 items: 
                   - sensor.bed_load_raw
-                  - sensor.temp_michbaeck
+                  - entity: sensor.temp_michbaeck
+                    icon_color: temp
+                    
+          - type: divider
           - type: custom:nmo-row
             head: sensor.esp20
             items: 
@@ -1512,6 +1641,7 @@ views:
                     attribute: RSSI
                     lead: "WLAN: "
                     trail: " db"
+                    icon_color: wlan
                   - entity: sensor.esp20
                     attribute: plugin
                     lead: "Plugin version: "
@@ -1522,11 +1652,14 @@ views:
                   type: section
                   label: Sensoren/Geräte
                 items: 
-                  - sensor.plant_michbaeck_1
+                  - entity: sensor.plant_michbaeck_1
+                    icon_color: plant
                   - binary_sensor.plant_michbaeck_1_water
                   - switch.plant_michbaeck_1_water
                   - switch.plant_michbaeck_1_power
                   - sensor.lux_michbaeck_1
+                  
+          - type: divider
           - type: custom:nmo-row
             head: sensor.esp22
             items: 
@@ -1544,6 +1677,7 @@ views:
                     attribute: RSSI
                     lead: "WLAN: "
                     trail: " db"
+                    icon_color: wlan
                   - entity: sensor.esp22
                     attribute: plugin
                     lead: "Plugin version: "
@@ -1555,6 +1689,8 @@ views:
                   label: Sensoren/Geräte
                 items: 
                   - switch.boiler
+                  
+          - type: divider
           - type: weblink
             url: http://esp50
             name: sonofftouch01 - Bad Licht
@@ -1573,12 +1709,15 @@ views:
             name: sonoff05 - michbaeck Heizung
 
       - id: system_3
-        type: custom:monster-card
-        card:
-          type: glance
-        filter:
-          include:
-            - domain: device_tracker
+        type: entities
+        entities:
+          - type: custom:nmo-row
+            head:
+              entity: group.all_devices
+              group_config:
+                secondary_info: last-changed
+                infos:
+                  icon_color: auto
 
 #-----------------------------------------------------------------------------#
 #* automation
@@ -1675,7 +1814,7 @@ views:
               secondary_info: entity-id
             items:
               - entity: input_boolean.alexa_toggle
-              - entity: input_boolean.alexa_toggle2
+              #> - entity: input_boolean.alexa_toggle2
               - entity: input_boolean.asleep
               - entity: input_boolean.climate_automatic
               - entity: input_boolean.debug_attributes
@@ -1945,23 +2084,23 @@ views:
             open: false
             items:
               - entity: light.grosses_licht
-                infos:
-                  - template: '{{ states("light.grosses_licht") }}'
-                  - template: '{{ "RGB: " + state_attr("light.grosses_licht", "rgb_color")|string }}'
-                  - template: RGB '{{ state_attr("light.grosses_licht", "rgb_color") }}' RGB
-                  - template: >
-                      {{ "multiline template1" }}
-                      {{ "multiline template2" }}
-                  - template: >
-                      {% if is_state("input_boolean.view_details", "on") %}
-                        Details aktiviert
-                      {% endif %}
-                  - template: >
-                      {% if is_state("input_boolean.view_details", "on") %}
-                        Details aktiviert
-                      {% else %}
-                        Details deaktiviert
-                      {% endif %}
+                # infos:
+                  # - template: '{{ states("light.grosses_licht") }}'
+                  # - template: '{{ "RGB: " + state_attr("light.grosses_licht", "rgb_color")|string }}'
+                  # - template: RGB '{{ state_attr("light.grosses_licht", "rgb_color") }}' RGB
+                  # - template: >
+                  #     {{ "multiline template1" }}
+                  #     {{ "multiline template2" }}
+                  # - template: >
+                  #     {% if is_state("input_boolean.view_details", "on") %}
+                  #       Details aktiviert
+                  #     {% endif %}
+                  # - template: >
+                  #     {% if is_state("input_boolean.view_details", "on") %}
+                  #       Details aktiviert
+                  #     {% else %}
+                  #       Details deaktiviert
+                  #     {% endif %}
                   
               # - type: custom:nmo-row
                 # head: light.stehlampe
@@ -1973,7 +2112,9 @@ views:
                 #   - type: custom:slider-entity-row
                 #     entity: light.ikea
           - type: custom:nmo-row
-            head: sensor.flux
+            head: 
+              entity: sensor.flux
+              icon_color: mired
             items:
               - entity: light.stehlampe
                 secondary_info: last-changed
@@ -2008,8 +2149,18 @@ views:
             items:
               - entity: sensor.sun_elevation
                 secondary_info: last-changed
-              - entity: sensor.light_aussen
+                icon_color: "#ff0000"
+              - entity: climate.michbaeck
+                icon_color: climate
                 secondary_info: entity-id
+              - entity: sensor.temp_michbaeck
+                icon_color: temp
+              - entity: sensor.flux
+                icon_color: mired
+              - entity: sensor.flux
+                icon_color: kelvin
+              # - entity: sensor.plant_michbaeck_1
+              #   icon_color: plant
             # group_config:
             #   secondary_info: entity-id
             open: true

@@ -166,3 +166,26 @@ media_player.stereopaar:
 sensor.vpn_disconnects:
   friendly_name: VPN today
   unit_of_measurement: disconnects
+sensor.bed_load_step:
+  icon: mdi:scale
+sensor.bed_load:
+  icon: mdi:scale
+sensor.bed_load_nolimit:
+  icon: mdi:scale
+binary_sensor.cube:
+  icon: mdi:cube-outline
+input_number.bed_load_sensitivity:
+  friendly_name: Empfindlichkeit
+sensor.plant_michbaeck_1:
+  friendly_name: Pflanze michbaeck 1
+switch.plant_michbaeck_1_water:
+  friendly_name: Pflanze michbaeck 1 gießen
+binary_sensor.plant_michbaeck_1_water:
+  friendly_name: Pflanze michbaeck 1 Wassertank
+switch.plant_michbaeck_1_power:
+  friendly_name: Pflanze michbaeck 1 Power
+switch.boiler:
+  icon: mdi:fire
+cover.window_michbaeck_1:
+  device_class: window
+  friendly_name: Fenster michbaeck 1

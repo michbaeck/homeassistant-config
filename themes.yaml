@@ -74,6 +74,7 @@ themes:
     paper-toggle-button-unchecked-bar-color: "var(--paper-toggle-button-checked-bar-color)"
     paper-toggle-button-unchecked-button-color: "var(--mbbrown)"
     primary-background-color: "var(--mbbg1)"
+    # background_color: "var(--primary-background-color)"
     primary-color: "var(--mbseclight)"
     primary-text-color: "var(--mbtext)"
     secondary-background-color: "var(--mbbg1)"

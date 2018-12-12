@@ -49,14 +49,14 @@ class nmoRow extends Polymer.Element {
     <div id=topbar class=nobar></div>
     <div id=head>
       <div class=toggle on-click="doToggle">
-      <ha-icon icon="[[_icon]]"></ha-icon>
+        <ha-icon icon="[[_icon]]"></ha-icon>
       </div>
     </div>
     <li id="rows" class="closed">
     </li>
     `
   }
-
+    
   update() {
     this._icon = this.closed ? 'mdi:chevron-up' : 'mdi:chevron-down';   // assign icon depending on open/close state
 
@@ -266,8 +266,9 @@ class nmoRow extends Polymer.Element {
 
   _updateThirds(item) {
 
-    if(item._config.infos) {
-      let row = item.shadowRoot.querySelector("hui-generic-entity-row");
+    let row = item.shadowRoot.querySelector("hui-generic-entity-row");
+
+    // if(item._config.infos) {
       let second = row.root.querySelector("div.flex");
       second = second.querySelector("div.info").querySelector("div.secondary");
       let count = 0;
@@ -288,10 +289,12 @@ class nmoRow extends Polymer.Element {
         }
 
         if(info.entity) {
-          if (info.attribute) {
-            info.data = this._hass.states[info.entity].attributes[info.attribute];
-          } else {
-            info.data = this._hass.states[info.entity].state;
+          if(this._hass.states[info.entity]) {
+            if (info.attribute) {
+                info.data = this._hass.states[info.entity].attributes[info.attribute];
+            } else {
+              info.data = this._hass.states[info.entity].state;
+            }
           }
         }
 
@@ -314,31 +317,177 @@ class nmoRow extends Polymer.Element {
         if(!info.data) info.data = "";
         if(!info.trail) info.trail = "";
 
-        // if(data_old != info.data || info.template) {
-        if(!(info.data == "")) {
-          if(!second.querySelector("#"+idstring)) {
-            third = document.createElement('div');
-            third.style.fontStyle = 'italic';
-            third.id = idstring;
+        if(data_old != info.data || info.template) {
+          if(!(info.data == "")) {
+            if(!second.querySelector("#"+idstring)) {
+              third = document.createElement('div');
+              third.style.fontStyle = 'italic';
+              third.id = idstring;
+            } else {
+              third = second.querySelector("#"+idstring);
+            }
             
-          } else {
-            third = second.querySelector("#"+idstring);
-          }
-          
-          third.innerHTML = `
-              ${info.lead}\t${info.data}${info.trail}
-          `;
+            third.innerHTML = `
+                ${info.lead}\t\t${info.data}${info.trail}
+            `;
 
-          if(!second.querySelector("#"+idstring)) second.appendChild(third);
+            if(!second.querySelector("#"+idstring)) second.appendChild(third);
+          }
         }
-        // }
       });
 
       if(second.childElementCount > 6) {
         row.style.alignItems = 'flex-start';
         row.root.querySelector("div.flex").style.alignItems = 'flex-start';
       }
+    // }
+  }
+
+  _updateHost(item) {
+
+    if(item.hass && item._config.entity) {
+      let entity = item._config.entity;
+      let new_state;
+
+      if(item.hass.states[entity])
+        new_state = item.hass.states[entity];
+
+      if(item._config.icon_color)
+        this._iconColor(item);
+
+      if((new_state != item.previous_state) && item._config.infos) {
+        this._updateThirds(item);
+        item.previous_state = new_state;
+      }
     }
+  }
+
+  _iconColor(item) {
+    // TEMP 
+      // var x = ( 'hsl(' + (-48/11*state + 1680/11) + ', 100%, 40%)' ); return x;
+    // PLANT
+      // var x = ( 'hsl(' + (state*1.5) + ', 100%, 50%)'); return x;
+    // WLAN
+      // var x = ( 'hsl(' + (((state – (-80)) * 100) / 40) + ', 100%, 40%)'); return x;
+    // BATTERY + DISK
+      // var x = ( 'hsl(' + state + ', 100%, 40%)'); return x;
+    // CLIMATE 
+      // if (state === 'heat') return 'var(--paper-orange-400)';
+      // else if (state === 'cool') return 'var(--paper-blue-400)';
+      // else if (state === 'idle') return 'var(--state-icon-color)';
+      // else if (state === 'off') return 'var(--primary-background-color)'
+    // DEVICE_TRACKER + BINARY_SENSOR + SWITCH + INPUT_BOOLEAN
+    // FLUX
+    // console.info('iconColor called');
+
+    // if(item._config.icon_color) {
+      let row = item.shadowRoot.querySelector("hui-generic-entity-row");
+      let style = row.shadowRoot.querySelector("state-badge").shadowRoot.querySelector("ha-icon").style;
+      let state = row._stateObj.state;
+      let icon_color;
+      let rgb;
+
+      function colorTemperatureToRGB(kelvin) {
+        // from https://gist.github.com/paulkaplan/5184275
+          // From http://www.tannerhelland.com/4435/convert-temperature-rgb-algorithm-code/
+            // Start with a temperature, in Kelvin, somewhere between 1000 and 40000.  (Other values may work,
+            //  but I can't make any promises about the quality of the algorithm's estimates above 40000 K.)
+      
+          let temp = kelvin / 100;
+          let red, green, blue;
+      
+          if( temp <= 66 ){ 
+              red = 255; 
+              green = temp;
+              green = 99.4708025861 * Math.log(green) - 161.1195681661;
+      
+              if( temp <= 19){
+                  blue = 0;
+              } else {
+                  blue = temp-10;
+                  blue = 138.5177312231 * Math.log(blue) - 305.0447927307;
+              }
+          } else {
+              red = temp - 60;
+              red = 329.698727446 * Math.pow(red, -0.1332047592);
+              green = temp - 60;
+              green = 288.1221695283 * Math.pow(green, -0.0755148492 );
+              blue = 255;
+          }
+        
+          const clamp = ( x, min, max ) => {
+              if(x<min){ return min; }
+              if(x>max){ return max; }
+          
+              return x;
+          }
+      
+          return {
+              r : clamp(red,   0, 255),
+              g : clamp(green, 0, 255),
+              b : clamp(blue,  0, 255)
+          }
+        
+      }
+      
+      if(item._config.icon_color == "auto") item._config.icon_color = row._stateObj.split('.', 1)[0];
+
+      switch(item._config.icon_color){
+        case "temp":
+          icon_color = 'hsl(' + (-48/11*state + 1680/11) + ', 100%, 40%)';
+          break;
+        case "plant":
+          icon_color = 'hsl(' + (state*1.5) + ', 100%, 50%)';
+          break;
+        case "wlan":
+          icon_color = 'hsl(' + (((state - (-80)) * 100) / 40) + ', 100%, 40%)';
+          break;
+        case "battery":
+        case "disk":
+          icon_color = 'hsl(' + state + ', 100%, 40%)';
+          break;
+        case "lux":
+          icon_color = 'hsl(60, 50%, ' + clamp(state,0,100) + '%)';
+          break;
+        case "mired":
+          let kelvin = 1000000/state;
+          rgb = colorTemperatureToRGB(kelvin);
+          icon_color = 'rgb(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ')';
+          break;
+        case "kelvin":
+          rgb = colorTemperatureToRGB(state);
+          icon_color = 'rgb(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ')';
+          break;
+        case "device_tracker":
+        case "binary_sensor":
+        case "switch":
+        case "input_boolean":
+          if(state === ('on'||'home'||'true'||true)) {
+            icon_color = 'var(--state-icon-active-color)';
+          } else {
+            icon_color = 'var(--label-badge-red)';
+          }
+          break;
+        case "climate":
+          if (state === 'heat') {
+            icon_color = 'var(--label-badge-red)';
+          } else if (state === 'cool') {
+            icon_color = 'var(--label-badge-blue)';
+          } else if (state === 'idle') {
+            icon_color = 'var(--state-icon-color)';
+          } else if (state === 'off') {
+            icon_color = 'var(--primary-background-color)'
+          }
+          break;
+        case "window":
+          if(state === 'on') icon_color = 'var(--label-badge-blue)';
+          break;
+        default:
+          icon_color = item._config.icon_color;
+          break;
+      }
+      style.color = icon_color;
+    // }
   }
 
   setConfig(config) {
@@ -349,6 +498,10 @@ class nmoRow extends Polymer.Element {
     this._config = config;
     this.closed = !this._config.open;
     this.update();
+
+    if(this.items && this.items.forEach) {
+      this.items.forEach( (item) => this._updateHost(item));
+    }
   }
 
   set hass(hass) {
@@ -360,7 +513,7 @@ class nmoRow extends Polymer.Element {
 
     if(this.items && this.items.forEach) {
       this.items.forEach( (item) => item.hass = hass); // update each row with new hass object
-      this.items.forEach( (item) => this._updateThirds(item));
+      this.items.forEach( (item) => this._updateHost(item));
     }
   }
 }
@@ -380,13 +533,21 @@ customElements.define('nmo-row', nmoRow);
 =           - sensor.outside_temperature
 *           - entity: light.bedroom
 *             secondary_info: last-changed
-*             infos:
-*               - data: sensor.lux_bedroom
-*                 lead: "Illuminance "
-*                 trail: "lx"
-*               - text: this is just a static remark
-*               - template: '{{ state_attr("sun.sun", "elecation")|string + "°" }}'
+*             infos:    # add additional infos (along with secondary_infos 'entity-id' or 'last-changed')
+*               - data: sensor.lux_bedroom    # define a value to show
+*                 lead: "Illuminance "    # append strings (remarks, descriptions, units, etc.) before...
+*                 trail: "lx"   # ...or behind that value
+*               - text: this is just a static remark    # add a static plain comment
+*               - template: '{{ state_attr("sun.sun", "elecation")|string + "°" }}'   # use templates as you're used to
 *                 lead: 'sun is at: '
+*           - entity: sensor.temp_bedroom
+*             icon_color: temp    # change icon color dynamically (choose from predefined settings: [temp,plant,mired,kelvin,battery,disc,wlan...])
+*           - entity: light.ceiling
+*             icon_color: '#FF0000'   # or choose a static one
+*             infos:
+*               - color_temp    # just use an attribute name to show the attribute from heading entity...
+*               - entity:   # ...use an entity_id to show its state
+*                 attribute   # ...add an attribute to show this instead
 .       - light.bed_light
 =       - type: custom:fold-entity-row
 =         head:
@@ -400,10 +561,10 @@ customElements.define('nmo-row', nmoRow);
 =           - light.kitchen_lights
 .       - light.bed_light
 =       - type: custom:fold-entity-row
-=         head:
+=         head:   # you can define the header only without items (the control arrow will be hidden in that case)
 =           entity: light.bedroom
 *           infos: 
-*             - template: >
+*             - template: >   # use conditional templates (line will not be shown, if template results in emtpy string)
 *                 {% if is_state("input_boolean.show_details", "on") %}
 *                   {{ states("sensor.lux_bedroom")|string + "lx" }}
 *                 {% endif %}
@@ -423,7 +584,11 @@ this.$.rows.
 
 nmo-row
 
+!icons
+this.$.head.
+  firstElementChild.firstElementChild.shadowRoot.querySelector("hui-generic-entity-row").shadowRoot.querySelector("state-badge").$.icon.style.color
 
+this.$.rows.forEach...
 
 */
 
