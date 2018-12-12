@@ -531,10 +531,10 @@ customElements.define('nmo-row', nmoRow);
 =         items:
 =           - sensor.outside_humidity
 =           - sensor.outside_temperature
-*           - entity: light.bedroom
-*             secondary_info: last-changed
+=           - entity: light.bedroom
+=             secondary_info: last-changed
 *             infos:    # add additional infos (along with secondary_infos 'entity-id' or 'last-changed')
-*               - data: sensor.lux_bedroom    # define a value to show
+*               - entity: sensor.lux_bedroom    # define a value to show
 *                 lead: "Illuminance "    # append strings (remarks, descriptions, units, etc.) before...
 *                 trail: "lx"   # ...or behind that value
 *               - text: this is just a static remark    # add a static plain comment
@@ -545,7 +545,7 @@ customElements.define('nmo-row', nmoRow);
 *           - entity: light.ceiling
 *             icon_color: '#FF0000'   # or choose a static one
 *             infos:
-*               - color_temp    # just use an attribute name to show the attribute from heading entity...
+*               - color_temp    # just use an attribute name to show the attribute from parent entity...
 *               - entity:   # ...use an entity_id to show its state
 *                 attribute   # ...add an attribute to show this instead
 .       - light.bed_light

@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-#* NOTES
+#* NOTES                                                                      #
 
   #---------------------------------------------#
   #= legend - comment highlighting
@@ -69,13 +69,11 @@
               #[todo] stepper
               #[todo] espeasy plugin
       #[dev]  boiler relais
-
 #-----------------------------------------------------------------------------#
 
 
-
 #-----------------------------------------------------------------------------#
-#* CORE CONFIG
+#* CORE CONFIG                                                                #
 
     homeassistant:
       name: Home
@@ -369,9 +367,8 @@
             brightness: 253
             rgb_color: [255,139,0]
             transition: 10
-
 #-----------------------------------------------------------------------------#
-#* SYSTEM + STATUS
+#* SYSTEM + STATUS                                                            #
 
     sensor ha_version:
       platform: version
@@ -560,9 +557,8 @@
       # count from 00:00 to now
       start: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
       end: '{{ now() }}'
-
 #-----------------------------------------------------------------------------#
-#* NOTIFY
+#* NOTIFY                                                                     #
 
     ios:
       push:
@@ -661,9 +657,8 @@
           friendly_name: Ticker
           value_template: >-
             {{ states("input_text.ticker")|default("") }}
-
 #-----------------------------------------------------------------------------#
-#* WEATHER + TIME
+#* WEATHER + TIME                                                             #
 
     sensor datetime:
       platform: time_date
@@ -794,9 +789,8 @@
             {% else %}
               {{ x }}
             {% endif %}
-
 #-----------------------------------------------------------------------------#
-#* MEDIA
+#* MEDIA                                                                      #
 
     sensor spotify-playlist:
       platform: spotify-playlist
@@ -822,9 +816,8 @@
         c1ad6eda0fa2f4b50dca9e05374be31c2f143179: 'Küche'
         b9cfe86fa7e75ae5a025fae31c22f5f02946b872: 'Echos'
         eccd212a0a600278ec3432a76a70c9b1e1612806: 'Computer'
-
 #-----------------------------------------------------------------------------#
-#* LIGHT + MOTION
+#* LIGHT + MOTION                                                             #
 
     #| sun.sun                                             
     #|   |_ sensor.sun_elevation                           
@@ -924,7 +917,6 @@
             {% set flux = [[flux,color_max]|min,250]|max|int %}
 
             {{ flux }}
-    
   #----------------------------------------------------------------------------#
   #= FLUR
 
@@ -976,7 +968,6 @@
       entities:
         - light.flur_links
         - light.flur_rechts
-
   #----------------------------------------------------------------------------#
   #= KUECHE
 
@@ -1014,7 +1005,6 @@
       name: kueche
       entities:
         - light.esstisch
-
   #----------------------------------------------------------------------------#
   #= BAD
 
@@ -1052,7 +1042,6 @@
       availability_topic: /sonofftouch01/system
       payload_available: online
       payload_not_available: offline
-
   #----------------------------------------------------------------------------#
   #= WOHNZIMMER
 
@@ -1061,7 +1050,6 @@
       name: wohnzimmer
       entities:
         - light.wohnzimmer_licht
-
   #----------------------------------------------------------------------------#
   #= MICHBAECK
 
@@ -1493,9 +1481,8 @@
             {% else %}
               {{ states("sensor.light_michbaeck_auto_state") }}
             {%- endif -%}
-
 #-----------------------------------------------------------------------------#
-#* CLIMATE + TEMP
+#* CLIMATE + TEMP                                                             #
 
     #| anyone home or traveling home  → presence = true
     #| presence(true) + time + temp   → binary_sensor.climate_home = true
@@ -1555,7 +1542,6 @@
                 is_state("sensor.daily_routine", "alarm_fadein")
               )
             }}
-
   #---------------------------------------------------------------------------#
   #= FLUR
 
@@ -1568,7 +1554,6 @@
           unit_of_measurement: "°C"
           value_template: >-
             {{ state_attr("sensor.motion_flur", "temperature")|default(0)|float|round(2) }}
-
   #----------------------------------------------------------------------------#
   #= KUECHE
 
@@ -1647,7 +1632,6 @@
             seconds: 2
           delay_off:
             seconds: 2
-
   #----------------------------------------------------------------------------#
   #= BAD
 
@@ -1713,10 +1697,8 @@
             seconds: 2
           delay_off:
             seconds: 2
-
   #----------------------------------------------------------------------------#
   #= WOHNZIMMER
-
   #----------------------------------------------------------------------------#
   #= MICHBAECK
 
@@ -1851,9 +1833,8 @@
             seconds: 2
           delay_off:
             seconds: 2
-
 #-----------------------------------------------------------------------------#
-#* OTHER DEVICES
+#* OTHER DEVICES                                                              #
 
     #| switch.loetkolben via MQTT
     #| switch.drucker via MQTT
@@ -1905,9 +1886,8 @@
             service: light.turn_off
             data:
               entity_id: light.computer
-
 #-----------------------------------------------------------------------------#
-#* TRACKER + ROUTINE
+#* TRACKER + ROUTINE                                                          #
 
     #| device_tracker.brain by iOS app
 
@@ -2009,9 +1989,8 @@
               is_state("sensor.michbaeck", "home") or
               is_state("sensor.daily_routine", "travel_home")
             }}
-
 #-----------------------------------------------------------------------------#
-#* SLEEP/ALARM
+#* SLEEP/ALARM                                                                #
 
     #|   sensor.bed_load_raw via MQTT
     #| + input_number.bed_load_raw_min
@@ -2146,9 +2125,8 @@
             {% else %}
               0
             {% endif %}
-
 #-----------------------------------------------------------------------------#
-#* ALARM
+#* ALARM                                                                      #
 
     binary_sensor workday:
       platform: workday
@@ -2179,9 +2157,11 @@
               and 
               is_state('calendar.arbeit', 'off')
             }}
+#-----------------------------------------------------------------------------#
+
 
 #-----------------------------------------------------------------------------#
-#* INPUT
+#* INPUT                                                                      #
 
   #---------------------------------------------------------------------------#
   #= BOOL
@@ -2235,12 +2215,10 @@
 
       wecker_toggle:    # enable/disable morning alarm automation
         name: Wecker Automatik
-
   #---------------------------------------------------------------------------#
   #= NUMBER
 
     input_number:
-
     #-------------------------------------------------------------------------#
     #= LIGHT
 
@@ -2306,7 +2284,6 @@
         # min: 0
         # max: 10000
         # step: 0.01
-
     #-------------------------------------------------------------------------#
     #= MOTION
 
@@ -2345,7 +2322,6 @@
         min: 1
         max: 15
         step: 1
-     
     #-------------------------------------------------------------------------#
     #= CLIMATE
 
@@ -2383,7 +2359,6 @@
         # min: 5
         # max: 30
         # step: 0.1
-
     #-------------------------------------------------------------------------#
     #= SLEEP
 
@@ -2442,7 +2417,6 @@
         # max: 100
         # step: 0.1
         # initial: 0
-  
     #-------------------------------------------------------------------------#
     #= ALARM
 
@@ -2454,7 +2428,6 @@
         min: 0
         max: 55
         step: 5
-
     #-------------------------------------------------------------------------#
     #= MISC
 
@@ -2485,7 +2458,6 @@
         min: 0
         max: 100
         step: 1
-
   #---------------------------------------------------------------------------#
   #= SELECT
 
@@ -2576,7 +2548,6 @@
           - travel_home   # when leaving work
           - freetime_away   # when leaving home after work or on free days
           - unknown
-
   #---------------------------------------------------------------------------#
   #= TEXT
 
@@ -2609,7 +2580,6 @@
       alexa_say:
         name: alexa_say
         max: 500
-
   #---------------------------------------------------------------------------#
   #= DATETIME
 
@@ -2680,9 +2650,8 @@
       climate_7_end:
         name: Sonntag Ende
         has_time: true
-
 #-----------------------------------------------------------------------------#
-#* AUTOMATION
+#* AUTOMATION                                                                 #
 
     shell_command:
       debug_rename: mv /home/homeassistant/.homeassistant/www/debug/homeassistant_debug.txt /home/homeassistant/.homeassistant/www/debug/archive/{{ states("sensor.date")+"_"+states("sensor.time")+"_-_homeassistant_debug.log" }}
@@ -3108,7 +3077,6 @@
               title: Datenbank Fehler
               message: >-
                 Es steht ein Update auf Version {{ states("updater.updater")|string }} zur Verfügung, deine aktuelle Version ist {{ states("sensor.current_version")|string }}.
-
   #---------------------------------------------------------------------------#
   #= SLEEP
 
@@ -3335,7 +3303,6 @@
               replace_attributes: false
               value: >-
                 {{ state_attr("variable.sleep_cycle", "lowpassratio")|default(0) }}
-
   #--------------------------------------------------------------------------#
   #= MORNING ROUTINE
 
@@ -3661,7 +3628,6 @@
                 {% set timediff = ((timeleave - timenow)/60) -%}
                 {{ timediff|int <= 5 }}
           - service: script.all_media_off
-
   #---------------------------------------------------------------------------#
   #= TRACKING
 
@@ -3882,7 +3848,6 @@
               data:
                 push:
                   sound: 'door_chime.wav'
-
   #---------------------------------------------------------------------------#
   #= CLIMATE
 
@@ -3910,19 +3875,9 @@
               - input_datetime.climate_7_end
               - sensor.time
         action:
-          - service: notify.homeassistant_debug
-            data_template:
-              message: >-
-                {{ 
-                  now()|string + " - automation.climate_home_new (\"" + 
-                  state_attr("automation.climate_home_new", "friendly_name") + 
-                  "\") triggered by " + trigger.entity_id + 
-                  " changing its state FROM: \"" + trigger.from_state.state|string + 
-                  "\" TO: \"" + trigger.to_state.state|string + "\"" 
-                }}
           - service: variable.set_variable
             data_template:
-              variable: climate_michbaeck_state
+              variable: climate_home_state
               replace_attributes: false
               attributes_template: >-
                 {% set attr = trigger.entity_id %}
@@ -3963,6 +3918,7 @@
                   "{" + 
                     "\"" + attr + "\":\"" + value|default("unknown")|string + "\"" +
                     ",\"" + "time" + "\":\"" + time|default("unknown")|string + "\"" +
+                    ",\"" + "prev_state" + "\":\"" + states("variable.climate_home_state")|string + "\"" +
                   "}"
                 }}
               value: >-
@@ -4001,6 +3957,19 @@
                 {% endif %}
 
                 {{ value|default("unknown") }}
+          - condition: template   # log only if state changed
+            value_template: >-
+              {{ states("variable.climate_home_state")|string != state_attr("variable.climate_home_state","prev_state")|string }}
+          - service: notify.homeassistant_debug
+            data_template:
+              message: >-
+                {{ 
+                  now()|string + " - automation.climate_home_new (\"" + 
+                  state_attr("automation.climate_home_new", "friendly_name") + 
+                  "\") triggered by " + trigger.entity_id + 
+                  " changing its state FROM: \"" + trigger.from_state.state|string + 
+                  "\" TO: \"" + trigger.to_state.state|string + "\"" 
+                }}
 
       - id: climate_michbaeck_new
         alias: climate_michbaeck_new
@@ -4360,7 +4329,6 @@
                 {% else %}
                   {{ states("input_number.climate_away_temp")|float }}
                 {% endif %}
-
   #---------------------------------------------------------------------------#
   #= MOTION
 
@@ -4547,7 +4515,6 @@
             #.     {{ now()|string + " - " }} automation.motion_michbaeck_1_off triggered. 
             #.     run scrip.thermostat_michbaeck_off
           - service: script.thermostat_michbaeck_off
-
   #---------------------------------------------------------------------------#
   #= LIGHT
 
@@ -4894,7 +4861,6 @@
                - light.flur
               transition: 10
               color_temp: '{{ [states("sensor.flux")|int * 1.1, 500]|min|int }}'
-
   #---------------------------------------------------------------------------#
   #= PLANT
 
@@ -4962,7 +4928,6 @@
 
       - id: plant_water    # water flower if < 30, update state >> should retrigger if more water needed
         alias: plant_water
-        initial_state: false
         trigger:
           platform: state
           entity_id: 
@@ -4974,7 +4939,7 @@
             {{
               is_state("binary_" + trigger.entity_id + "_water", "on") and
               is_state("input_boolean.asleep", "off") and
-              trigger.to_state.state <= 30
+              trigger.to_state.state|int <= 30
             }}
         action:
           - service: persistent_notification.dismiss
@@ -5074,7 +5039,6 @@
               title: Wassertank ist leer
               message: >-
                 {{ state_attr(trigger.entity_id, "friendly_name") + " ist leer und muss aufgefüllt werden." }}
-
   #---------------------------------------------------------------------------#
   #= ALERTS
 
@@ -5209,7 +5173,6 @@
                 {%- else -%}
                   {{ state_attr(trigger.entity_id, "friendly_name") }} hat nur noch {{ trigger.to_state.state|int }} Prozent und sollte bald ausgewechselt werden.
                 {%- endif %} 
-
   #---------------------------------------------------------------------------#
   #= MISC HELPERS
 
@@ -5223,7 +5186,6 @@
               minutes: 45
         action:
         - service: script.loetkolben_off
-
   #---------------------------------------------------------------------------#
   #= WEATHER
         
@@ -5315,7 +5277,6 @@
             data_template:
               text: >-
                   {{ "Es gibt eine Stufe " + states("sensor.dwd_advance_warning_level")|string + " Warnung vom DWD, Sie lautet " + state_attr("sensor.dwd_advance_warning_level", "warning_1_headline") }}.
-
   #---------------------------------------------------------------------------#
   #= CONTROLLER
         
@@ -5337,7 +5298,6 @@
             data_template:
               value: >-
                 {{ trigger.event.data.action_value|default(0)|float }}
-
   #---------------------------------------------------------------------------#
   #= TICKER
 
@@ -5732,9 +5692,8 @@
           - service: script.dotmatrixdisplay
             data_template:
               text: '{{ states("input_text.ticker") }}'
-
 #-----------------------------------------------------------------------------#
-#* SCRIPTS
+#* SCRIPTS                                                                    #
 
     script:
 
@@ -6038,7 +5997,6 @@
             data:
               variable: database_check
               value: 'ok'
-
   #---------------------------------------------------------------------------#
   #= MORNING ROUTINE   
 
@@ -6542,7 +6500,6 @@
                 - light.grosses_licht
                 - light.schreibtisch
                 - fan.michbaeck
-
   #---------------------------------------------------------------------------#
   #= TRACKING
 
@@ -6617,7 +6574,6 @@
                 {%- else -%}
                   unknown
                 {%- endif -%}
-           
   #---------------------------------------------------------------------------#
   #= CLIMATE
 
@@ -6846,7 +6802,6 @@
         #         {%- else -%}
         #           off
         #         {%- endif -%}
-
   #---------------------------------------------------------------------------#
   #= LIGHT
 
@@ -7298,7 +7253,6 @@
               transition: 6
               color_temp: >
                 {{ [states("sensor.flux")|int + 100, 500]|min|int }}
-
   #---------------------------------------------------------------------------#
   #= PLANT
 
@@ -7375,7 +7329,6 @@
             data_template:
               text: >-
                 {{ state_attr(plant, "friendly_name") + " braucht Wasser, Feuchtigkeit beträgt nur noch " + states(plant) + " %" }}
-
   #---------------------------------------------------------------------------#
   #= ALERTS
 
@@ -7435,7 +7388,6 @@
           - service: xiaomi_aqara.stop_ringtone
             data:
               gw_mac: 7811DCE136B6
-
   #---------------------------------------------------------------------------#
   #= MISC HELPERS
 
@@ -7493,7 +7445,6 @@
             data:
               cmd: 'lcdcmd,off'
               ip: '192.168.200.104'          
-
   #---------------------------------------------------------------------------#
   #= MEDIA
 
@@ -7877,7 +7828,6 @@
                 {%- elif is_state_attr("media_player.spotify", "shuffle", true) -%}
                   false
                 {%- endif -%}
-
   #---------------------------------------------------------------------------#
   #= WEATHER
 
@@ -7890,7 +7840,6 @@
               hs_color: ['{% set temp = states("sensor.temp_aussen")|default(40)|float -%} {% set hue = [(-48/11*temp + 1680/11)|int, 0]|max %} {{- hue|int -}}', 100]
               brightness: 255
               #. brightness: '{{ [[(states("sensor.light_michbaeck_1_pct")|int*255/100)|int,0]|max,255]|min }}'
-
   #---------------------------------------------------------------------------#
   #= CONTROLLER
   
@@ -8162,7 +8111,6 @@
                 'cube_script'
               message: >-
                 {{"script.cube_free_fall: " + value|string }}
-
   #---------------------------------------------------------------------------#
   #= TICKER
 
@@ -8244,5 +8192,4 @@
                  "pause": {% if short %}3000{% else %}0{% endif %}
                 }
           - delay: '00:00:0{{ (text|list|count/5)|int }}'   # keep script on as long as it takes to scroll
-     
 #-----------------------------------------------------------------------------#
