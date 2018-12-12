@@ -2699,6 +2699,9 @@
       #.   restore: true
       #. climate_home_away:
       #.   restore: true
+
+      homeassistant_starttime:
+
       climate_bad_save:
         attributes:
           unit_of_measurement: '°C'
@@ -2852,6 +2855,11 @@
             data:
               variable: alexa_state
               value: 'off'
+          - service: variable.set_variable
+            data_template:
+              variable: homeassistant_starttime
+              value: >-
+                {{ now().timestamp()|int }}
           - service: frontend.set_theme
             data:
               name: michbaeck_material
@@ -3818,7 +3826,6 @@
               {{ is_state("script.alexa_says", "off") }}
           - service: script.alexa_summary
           
-
       - id: michbaeck_leaving_home    # set state to away on leave to enable/disable other automations
         alias: 'michbaeck_leaving_home'
         initial_state: true
@@ -5140,7 +5147,7 @@
                 {%- endif %} 
           - wait_template: >-
               {{ is_state("script.alexa_says", "off") }}
-          - service: script.alexa_says                                                # voice
+          - service: script.alexa_says    # voice
             data_template:
               text: >-
                 {%- if trigger.to_state.state == "unavailable" -%}
@@ -6812,8 +6819,8 @@
               entity_id: light.grosses_licht_3
               brightness: 255
               rgb_color: [255,0,0]
-          - delay:
-              milliseconds: 100
+          # - delay:
+          #     milliseconds: 100
           - service: light.turn_off
             data:
               entity_id: light.grosses_licht_3
@@ -6822,8 +6829,8 @@
               entity_id: light.grosses_licht_2
               brightness: 255
               rgb_color: [255,0,0]
-          - delay:
-              milliseconds: 100
+          # - delay:
+          #     milliseconds: 100
           - service: light.turn_off
             data:
               entity_id: light.grosses_licht_2
@@ -6832,8 +6839,8 @@
               entity_id: light.grosses_licht_1
               brightness: 255
               rgb_color: [255,0,0]
-          - delay:
-              milliseconds: 100
+          # - delay:
+          #     milliseconds: 100
           - service: light.turn_off
             data:
               entity_id: light.grosses_licht_1
@@ -6842,8 +6849,8 @@
               entity_id: light.grosses_licht_3
               brightness: 255
               rgb_color: [0,255,0]
-          - delay:
-              milliseconds: 100
+          # - delay:
+          #     milliseconds: 100
           - service: light.turn_off
             data:
               entity_id: light.grosses_licht_3
@@ -6852,8 +6859,8 @@
               entity_id: light.grosses_licht_2
               brightness: 255
               rgb_color: [0,255,0]
-          - delay:
-              milliseconds: 100
+          # - delay:
+          #     milliseconds: 100
           - service: light.turn_off
             data:
               entity_id: light.grosses_licht_2
@@ -6862,8 +6869,8 @@
               entity_id: light.grosses_licht_1
               brightness: 255
               rgb_color: [0,255,0]
-          - delay:
-              milliseconds: 100
+          # - delay:
+          #     milliseconds: 100
           - service: light.turn_off
             data:
               entity_id: light.grosses_licht_1
@@ -6872,8 +6879,8 @@
               entity_id: light.grosses_licht_3
               brightness: 255
               rgb_color: [0,0,255]
-          - delay:
-              milliseconds: 100
+          # - delay:
+          #     milliseconds: 100
           - service: light.turn_off
             data:
               entity_id: light.grosses_licht_3
@@ -6882,8 +6889,8 @@
               entity_id: light.grosses_licht_2
               brightness: 255
               rgb_color: [0,0,255]
-          - delay:
-              milliseconds: 100
+          # - delay:
+          #     milliseconds: 100
           - service: light.turn_off
             data:
               entity_id: light.grosses_licht_2
@@ -6892,8 +6899,8 @@
               entity_id: light.grosses_licht_1
               brightness: 255
               rgb_color: [0,0,255]
-          - delay:
-              milliseconds: 100
+          # - delay:
+          #     milliseconds: 100
           - service: light.turn_off
             data:
               entity_id: light.grosses_licht_1

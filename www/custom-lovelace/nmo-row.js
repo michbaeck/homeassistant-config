@@ -355,7 +355,7 @@ class nmoRow extends Polymer.Element {
       if(item._config.icon_color)
         this._iconColor(item);
 
-      if((new_state != item.previous_state) && item._config.infos) {
+      if((new_state != item.previous_state || this._config.force_update) && item._config.infos) {
         this._updateThirds(item);
         item.previous_state = new_state;
       }
