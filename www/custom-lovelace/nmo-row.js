@@ -58,7 +58,7 @@ class nmoRow extends Polymer.Element {
   }
     
   update() {
-    this._icon = this.closed ? 'mdi:chevron-up' : 'mdi:chevron-down';   // assign icon depending on open/close state
+    this._icon = this.closed ? 'mdi:chevron-left' : 'mdi:chevron-down';   // assign icon depending on open/close state
 
     // assign class depending on open/close state (assign = do open or close)
     if(this.$) {
@@ -145,12 +145,12 @@ class nmoRow extends Polymer.Element {
 
       items.forEach ((item) => {
         if (item.infos) conf.push(item.infos);
-        //!conf[1].infos[0].data
-        //!conf[1].infos[0].lead
-        //!conf[1].infos[0].trail
-        //!conf[1].infos[1].data
-        //!conf[1].infos[1].lead
-        //!conf[1].infos[1].trail
+        //conf[1].infos[0].data
+        //conf[1].infos[0].lead
+        //conf[1].infos[0].trail
+        //conf[1].infos[1].data
+        //conf[1].infos[1].lead
+        //conf[1].infos[1].trail
       });
 
       if(this._config.head) { // remove conf.shift (= conf[0].entity) and move first row of hidden entities on top
@@ -430,6 +430,7 @@ class nmoRow extends Polymer.Element {
         
       }
       
+      if(!item._config.icon_color) item._config.icon_color = "auto";
       if(item._config.icon_color == "auto") item._config.icon_color = row._stateObj.split('.', 1)[0];
 
       switch(item._config.icon_color){
@@ -481,6 +482,16 @@ class nmoRow extends Polymer.Element {
           break;
         case "window":
           if(state === 'on') icon_color = 'var(--label-badge-blue)';
+          break;
+        case "lock":
+          if(state === 'locked') {
+            icon_color = 'var(--google-red-500)';
+          } else {
+            icon_color = 'var(--google-green-500)';
+          }
+          break;
+        case "cover":
+          if(state === 'open') icon_color = 'var(--state-icon-active-color)';
           break;
         default:
           icon_color = item._config.icon_color;

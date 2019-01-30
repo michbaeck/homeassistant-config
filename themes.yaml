@@ -1,3 +1,6 @@
+# javascript_version: latest
+javascript_version: es5
+
 themes:
   michbaeck_material:
    #------------------------------------------------------------------------#
@@ -26,7 +29,7 @@ themes:
    #------------------------------------------------------------------------#
    # predefined vars
     #. accent-color: "var(--mbsecondary)"
-    accent-color: "var(--mbpridark)"
+    accent-color: "#ef6d00"
     card-background-color: "var(--mbbg2)"
     dark-primary-color: "var(--mbsecdark)"
     # dark-disabled-opacity: 0.38
@@ -75,7 +78,7 @@ themes:
     paper-toggle-button-unchecked-button-color: "var(--mbbrown)"
     primary-background-color: "var(--mbbg1)"
     # background_color: "var(--primary-background-color)"
-    primary-color: "var(--mbseclight)"
+    primary-color: "#477199"
     primary-text-color: "var(--mbtext)"
     secondary-background-color: "var(--mbbg1)"
     secondary-text-color: "var(--mbtextsec)"

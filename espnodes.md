@@ -83,3 +83,76 @@ endon
 
 # esp22
 
+
+
+# esp27
+
+
+## rules1
+on recovery do
+  reboot
+endon
+
+on speed1 do
+  pwm,2,250
+endon
+
+on speed2 do
+  pwm,2,500
+endon
+
+on speed3 do
+  pwm,2,750
+endon
+
+on speed4 do
+  pwm,2,1000
+endon
+
+on open do
+  CANDLE:5:00ff00:255
+  gpio,4,0
+  gpio,5,1
+endon
+
+on close do
+  CANDLE:5:ff0000:255
+  gpio,4,1
+  gpio,5,0
+endon
+
+on stop do
+  gpio,4,0
+  gpio,5,0
+  CANDLE:0::
+endon
+
+on limit1#state=0 do //open
+  event,stop
+  CANDLE:1::255
+  timerSet,1,10
+endon
+
+on limit2#state=0 do //close
+  event,stop
+endon
+
+on button#state=0 do
+  if [limit1#state]=0
+    event,speed2
+    event,close
+  else
+    if [limit2#state]=0
+      event,speed2
+      event,open
+    endif
+  else
+    event,speed1
+    event,open
+  endif
+endon
+
+on rules#timer=1 do
+  CANDLE:0::
+endon
+  
