@@ -47,15 +47,19 @@
               # Error rendering data template: 
               # UndefinedError: 'dict object' has no attribute 'entity_id'
 
-    #[todo]   sleep script: set brightness = 100-cover
-    #[todo]   combine flur motions to virtual single sensor
-    #[todo]   combine bad motions to virtual single sensor
+    #[x]   sleep script: set brightness = 100-cover
+    #[x]   combine flur motions to virtual single sensor
+    #[x]   combine bad motions to virtual single sensor
     #[todo]   VLAN200 ACL
     #[todo]   ESPeasy p2p
     #[todo]   customize espeasy candle plugin
     #[todo]   alexa/ticker queue scripts
     #[todo]   work-time tracking
     #[todo]   influxDB for history
+    #[todo]   logging
+              # when
+              # by what
+              # action
 
     #[dev]    add notifications (eg climate off because window open; water empty)
     #[dev]    alexa event queue ('while you've been away, I did...')
@@ -75,7 +79,7 @@
     #[test]   get sleep cycle right
               #! bed_load cabling issues
               #! esp died
-    #[test]   massive recorder issues (use mySQL?)
+    #[x]   massive recorder issues (use mySQL?)
               # switched to mysql → huge improvement
     #[test]   make automations not turning off climates but 'standby' (to differ user-off and system-off)
 
@@ -119,14 +123,14 @@
       customize: !include customize.yaml
 
     logger:
-      default: fatal   # loglvls - critical,fatal,error,warning,warn,info,debug,notset
+      default: error   # loglvls - critical,fatal,error,warning,warn,info,debug,notset
       logs:
-        homeassistant.components.media_player: debug
-        homeassistant.components.media_player.alexa: debug
+        homeassistant.components.media_player: fatal
+        homeassistant.components.media_player.alexa: fatal
         # homeassistant.components.notify.ios: debug
         # homeassistant.components.ios: debug
         # homeassistant.components.mqtt: warn
-        # homeassistant.components.discovery: debug
+        homeassistant.components.discovery: warn
 
     frontend: !include themes.yaml
 
@@ -249,6 +253,10 @@
         domains:
           - climate
           - binary_sensor
+          - switch
+          - fan
+          - device_tracker
+          - input_select
         # entities:
         #   - automation.sleep_cycle_calculations
         #   - input_text.ticker
@@ -267,6 +275,7 @@
           - binary_sensor.motion_kueche
           - binary_sensor.motion_kueche_helper
           - binary_sensor.sleep_cycle_trend
+          - binary_sensor.johannes_handy
 
     #.tts:
       #.- platform: google
@@ -3128,34 +3137,38 @@
           - platform: homeassistant
             event: start
         action:
-          - service: shell_command.curl_discovery
-            data_template:
-              id: "01"
-          - service: shell_command.curl_discovery
-            data_template:
-              id: "02"
-          - service: shell_command.curl_discovery
-            data_template:
-              id: "04"
-          - service: shell_command.curl_discovery
-            data_template:
-              id: "05"
-          - service: shell_command.curl_discovery
-            data_template:
-              id: "07"
-          - service: shell_command.curl_discovery
-            data_template:
-              id: "10"
-          - service: shell_command.curl_discovery
-            data_template:
-              id: "11"
-          - service: shell_command.curl_discovery
-            data_template:
-              id: "20"
-          - service: shell_command.curl_discovery
-            data_template:
-              id: "22"
-          # - service: script.light_animation_test
+          - service: mqtt.publish
+            data:
+              topic: esp01/cmd
+              payload: discovery,update
+          - service: mqtt.publish
+            data:
+              topic: esp02/cmd
+              payload: discovery,update
+          - service: mqtt.publish
+            data:
+              topic: esp04/cmd
+              payload: discovery,update
+          - service: mqtt.publish
+            data:
+              topic: esp05/cmd
+              payload: discovery,update
+          - service: mqtt.publish
+            data:
+              topic: esp07/cmd
+              payload: discovery,update
+          - service: mqtt.publish
+            data:
+              topic: esp10/cmd
+              payload: discovery,update
+          - service: mqtt.publish
+            data:
+              topic: esp20/cmd
+              payload: discovery,update
+          - service: mqtt.publish
+            data:
+              topic: esp22/cmd
+              payload: discovery,update
           - service: frontend.set_theme
             data:
               name: michbaeck_material
@@ -3183,12 +3196,12 @@
               variable: homeassistant_starttime
               value: >-
                 {{ now().timestamp()|int }}
-          # - service: script.turn_off
-          #   data:
-          #     entity_id:
-          #       - script.light_animation_test
-          #       - script.light_animation_test_2
-          - service: script.auto_color_michbaeck_1
+          #> - service: script.turn_off
+          #>   data:
+          #>     entity_id:
+          #>       - script.light_animation_test
+          #>       - script.light_animation_test_2
+          #> - service: script.auto_color_michbaeck_1
 
       - id: homeassistant_cleanup   # tidy up database when asleep
         alias: homeassistant_cleanup
@@ -4137,35 +4150,40 @@
                 {% set timetrigger = as_timestamp(strptime(as_timestamp(trigger.to_state.last_changed)|timestamp_custom("%H:%M",true),"%H:%M")) %}
                 {% set window = (timenow-timetrigger)/60 > 10 %}
 
-                {%- if trigger.entity_id == 'device_tracker.beacon_home'
-                    and trigger.to_state.state == 'home'
+                {%- 
+                  if trigger.entity_id == 'device_tracker.beacon_home'
+                  and trigger.to_state.state == 'home'
                 -%}
                   home
-                {%- elif trigger.entity_id == 'device_tracker.beacon_work'
-                    and trigger.to_state.state == 'work'
+                {%- 
+                  elif trigger.entity_id == 'device_tracker.beacon_work'
+                  and trigger.to_state.state == 'work'
                 -%}
                   work
-                {%- elif trigger.entity_id == 'device_tracker.beacon_work'
-                    and trigger.to_state.state == 'not_home'
-                    and window == true
+                {%- 
+                  elif trigger.entity_id == 'device_tracker.beacon_work'
+                  and trigger.to_state.state == 'not_home'
+                  and window == true
                 -%}
                   away
-                {%- elif trigger.entity_id == 'device_tracker.cb58345aa18f4028a72da9fb0c30e6f9'
-                    and trigger.to_state.state == 'not_home'
+                {%- 
+                  elif trigger.entity_id == 'device_tracker.cb58345aa18f4028a72da9fb0c30e6f9'
+                  and trigger.to_state.state == 'not_home'
                 -%}
                   away
-                {%- elif trigger.entity_id == 'device_tracker.cb58345aa18f4028a72da9fb0c30e6f9'
-                    and not trigger.to_state.state == 'home'
+                {%- 
+                  elif trigger.entity_id == 'device_tracker.cb58345aa18f4028a72da9fb0c30e6f9'
+                  and not trigger.to_state.state == 'home'
                 -%}
                   {{ trigger.to_state.state }}
                 {%- endif -%}
+          - condition: state
+            entity_id: input_select.michbaeck
+            state: work
           - service: input_select.select_option
-            data_template:  
+            data:  
               entity_id: input_select.daily_routine
-              option: >-
-                {%- if is_state("input_select.michbaeck", "work") -%}
-                  work
-                {%- endif -%}
+              option: work
 
       - id: michbaeck_arrival_work
         alias: michbaeck_arrival_work
@@ -4197,36 +4215,37 @@
         condition:
           condition: template
           value_template: >-
-            {# arrival work + 10 hours - 30min/deg #}
+            {# arrival work + 9 hours - 30min/deg #}
             
-            {% set now = (now().hour*60 + now().minute)|int %}
+            {% set now2 = (now().hour*60 + now().minute)|int %}
             {% set start = states("variable.start_work")|int %}
             {% set tempdiff = states("variable.climate_michbaeck_save")|float - states("sensor.temp_michbaeck")|float %}
-            {% set heattime = start|float + 9*60 - tempdiff|float*0.5*60 %}
+            {% set heattime = start|float + 9*60 - (tempdiff|float*0.5*60)|round(1) %}
 
             {{ 
               is_state("sensor.michbaeck","work") and 
-              now|int >= heattime|int 
+              now2|int >= heattime|int 
             }}
         action:
           - service: notify.homeassistant_debug
             data_template:
               message: >-
-                {% set now = (now().hour*60 + now().minute)|int %}
-                {% set start = states("variable.start_work")|int %}
-                {% set tempdiff = states("variable.climate_michbaeck_save")|float - states("sensor.temp_michbaeck")|float %}
-                {% set heattime = start|float + 9*60*60 - tempdiff|float*0.5*60 %}
+                {%
+                  set tempdiff = states("variable.climate_michbaeck_save")|float - 
+                  states("sensor.temp_michbaeck")|float 
+                %}
 
                 {{ 
-                  now()|string + " - automation.michbaeck_preheat (\"" + state_attr("automation.michbaeck_preheat", "friendly_name") + "\") triggered." +
-                  " try to heat up " + tempdiff|string + "°C"
+                  now()|string + " - automation.michbaeck_preheat (\"" + 
+                  state_attr("automation.michbaeck_preheat", "friendly_name") + "\") triggered." +
+                  " Try to heat up " + tempdiff|round(1)|string + "°C"
                 }}         
           - service: script.daily_routine
             data:
               event: preheat
 
       #[test] when leaving work → travel_home
-      - id: michbaeck_travel_home    # when leaving office for 10min + after 15:00, set routine to travel_home (-> climate on)
+      - id: michbaeck_travel_home    # when leaving office for 10min + after 16:00, set routine to travel_home (-> climate on)
         alias: michbaeck_travel_home
         trigger:
           - platform: state
@@ -6729,11 +6748,12 @@
                   set max brightness. 
                   turn on radio. 
                   update routine, EVENT = alarm
-          - service: cover.open_cover
+          - service: cover.set_cover_position   #.open_cover
             data:
               entity_id:
                 - cover.window_michbaeck_1_blind
                 - cover.window_michbaeck_2_blind
+              position: 80
           - service: script.turn_off    # turn off light fading (in case triggered by motion)
             data:
               entity_id: script.wecker_fadein
@@ -6869,17 +6889,12 @@
           - service: script.daily_routine   # update routine state
             data:
               event: wakeup
-          - service: cover.open_cover
+          - service: cover.set_cover_position
             data:
               entity_id:
                 - cover.window_michbaeck_1_blind
                 - cover.window_michbaeck_2_blind
-          # - service: script.blind_michbaeck_1_set
-          #   data:
-          #     position: "up"
-          # - service: script.blind_michbaeck_2_set
-          #   data:
-          #     position: "up"
+              position: 80
           - service: script.turn_off    # stop alarm, if any
             entity_id:
               - script.wecker_snooze
@@ -7265,67 +7280,6 @@
   #---------------------------------------------------------------------------#
   #= DOOR/WINDOW
 
-      blind_michbaeck_1_set:
-        sequence:
-          - service: cover.set_cover_position
-            data_template:
-              entity_id:
-                - cover.window_michbaeck_1_blind
-              position: >-
-                {% set position = position|default("auto") %}
-
-                {% if 
-                  (
-                    position == "auto" and 
-                    state_attr("cover.window_michbaeck_1_blind","current_position")|int >= 50
-                  ) or
-                  position == "down"
-                %}
-                  75
-                {% elif 
-                  (
-                    position == "auto" and 
-                    state_attr("cover.window_michbaeck_1_blind","current_position")|int <= 50
-                  ) or
-                  position == "up" 
-                %}
-                  10
-                {% elif position == "fulldown" %}
-                  100
-                {% elif position == "fullup" %}
-                  0
-                {% endif %} 
-
-      blind_michbaeck_2_set:
-        sequence:
-          - service: cover.set_cover_position
-            data_template:
-              entity_id:
-                - cover.window_michbaeck_2_blind
-              position: >-
-                {% set position = position|default("auto") %}
-
-                {% if 
-                  (
-                    position == "auto" and 
-                    state_attr("cover.window_michbaeck_2_blind","current_position")|int >= 50
-                  ) or
-                  position == "down"
-                %}
-                  75
-                {% elif 
-                  (
-                    position == "auto" and 
-                    state_attr("cover.window_michbaeck_2_blind","current_position")|int <= 50
-                  ) or
-                  position == "up" 
-                %}
-                  10
-                {% elif position == "fulldown" %}
-                  100
-                {% elif position == "fullup" %}
-                  0
-                {% endif %}
   #---------------------------------------------------------------------------#
   #= CLIMATE
 
@@ -7957,6 +7911,9 @@
 
       auto_color_michbaeck_1:
         sequence:
+          - condition: state
+            entity_id: light.michbaeck_dimmer
+            state: 'on'
           - service: light.turn_on
             data_template:
               entity_id: 

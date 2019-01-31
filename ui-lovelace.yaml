@@ -163,19 +163,19 @@ resources:
   # - url: /local/custom-lovelace/home-setter.js?v=0
   #   type: js
 
-  - url: /local/custom-lovelace/upcoming-media-card.js?v=0
+  - url: /local/custom-lovelace/upcoming-media-card.js #?v=0
     type: js
 
-  - url: /local/custom-lovelace/card-tools.js?v=0
+  - url: /local/custom-lovelace/card-tools.js #?v=0
     type: js
 
-  - url: /local/custom-lovelace/tracker-card.js?v=0
+  - url: /local/custom-lovelace/tracker-card.js #?v=0
     type: js
 
-  - url: /local/custom-lovelace/value-only-card.js?v=0.0.1
+  - url: /local/custom-lovelace/value-only-card.js #?v=0.0.1
     type: js
 
-  - url: /local/custom-lovelace/nmo-row.js?v=0.0.3
+  - url: /local/custom-lovelace/nmo-row.js #?v=0.0.3
     type: js
 
   # - url: /local/custom-lovelace/graph-card/graph-card.js?v=0
@@ -196,13 +196,13 @@ resources:
   # - url: /local/custom-lovelace/popup-card.js?v=0
   #   type: js
 
-  - url: /local/custom-lovelace/slider-entity-row.js?v=0
+  - url: /local/custom-lovelace/slider-entity-row.js #?v=0
     type: js
 
   # - url: /local/custom-lovelace/swipe-card/swipe-card.js?v=1.1.0
   #   type: module
   # - url: https://cdn.jsdelivr.net/gh/bramkragten/custom-ui@master/swipe-card/swipe-card.min.js?v=0
-    type: module
+    #type: module
       # - type: custom:swipe-card
         # parameters:
         #   spaceBetween: 8
@@ -289,7 +289,7 @@ resources:
       # line_color_below	string	optional	v0.0.4	Set the line color for line_value_below.
       # hide_icon	        boolean	optional	v0.0.5	Set to true to hide icon.
 
-  - url: /local/custom-lovelace/mini-media-player-bundle.js?v=0
+  - url: /local/custom-lovelace/mini-media-player-bundle.js #?v=0
     type: module
       # Name	Type	Default	Since	Description
       # type	string	required	v0.1	custom:mini-media-player
@@ -322,7 +322,7 @@ resources:
       # max_volume	number	true	v0.8.2	Max volume for the volume slider (number between 1 - 100).
       # background	string	optional	v0.8.6	Background image, specify the image url "/local/background-img.png" e.g.
 
-  - url: /local/custom-lovelace/monster-card.js?v=0
+  - url: /local/custom-lovelace/monster-card.js #?v=0
     type: js
       # - type: custom:monster-card
         # card:
@@ -1488,15 +1488,6 @@ views:
       - input_boolean.view_details
       - input_boolean.view_debug
     cards:
-      - type: custom:tracker-card
-        title: Component Versions
-        trackers:
-          - sensor.custom_component_tracker
-
-      - type: custom:tracker-card
-        title: Card Versions
-        trackers:
-          - sensor.custom_card_tracker
 
       - id: system_4
         type: vertical-stack
@@ -1530,38 +1521,40 @@ views:
                   - entity: input_number.esp_unit
                   - entity: script.esp_recovery_mqtt
                   - entity: script.esp_recovery_http
-          - type: markdown
-            #.title: Debugging
-            content: >
-              ## Debugging
 
-              Type a regex string to compare with service names. 
-              e.g. [ **script\\.|light\\.** ] will log all services starting with either "script." or "light.".
-              Apply patterns **carefully** and enable debug_log below.
-          - type: entities
-            # title: Regex Strings
-            show_header_toggle: false
-            entities:
-              - type: custom:nmo-row
-                # force_update: true
-                head:
-                  type: section
-                  label: Debug states
-                items:
-                  - entity: input_text.debug_states_include
-                  - entity: input_text.debug_states_exclude
-                  - entity: input_boolean.debug_states
-                  - entity: input_boolean.debug_attributes
-              # - type: divider
-              - type: custom:nmo-row
-                # force_update: true
-                head:
-                  type: section
-                  label: Debug services
-                items:
-                  - entity: input_text.debug_services_include
-                  - entity: input_text.debug_services_exclude
-                  - entity: input_boolean.debug_services
+
+      - type: markdown
+        #.title: Debugging
+        content: >
+          ## Debugging
+
+          Type a regex string to compare with service names. 
+          e.g. [ **script\\.|light\\.** ] will log all services starting with either "script." or "light.".
+          Apply patterns **carefully** and enable debug_log below.
+      - type: entities
+        # title: Regex Strings
+        show_header_toggle: false
+        entities:
+          - type: custom:nmo-row
+            # force_update: true
+            head:
+              type: section
+              label: Debug states
+            items:
+              - entity: input_text.debug_states_include
+              - entity: input_text.debug_states_exclude
+              - entity: input_boolean.debug_states
+              - entity: input_boolean.debug_attributes
+          # - type: divider
+          - type: custom:nmo-row
+            # force_update: true
+            head:
+              type: section
+              label: Debug services
+            items:
+              - entity: input_text.debug_services_include
+              - entity: input_text.debug_services_exclude
+              - entity: input_boolean.debug_services
 
       - id: system_2
         type: custom:monster-card
@@ -1933,6 +1926,16 @@ views:
           - type: weblink
             url: http://esp55
             name: sonoff05 - michbaeck Heizung
+
+      - type: custom:tracker-card
+        title: Component Versions
+        trackers:
+          - sensor.custom_component_tracker
+
+      - type: custom:tracker-card
+        title: Card Versions
+        trackers:
+          - sensor.custom_card_tracker
 
       - id: system_3
         type: entities
